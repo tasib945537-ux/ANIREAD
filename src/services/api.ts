@@ -3331,36 +3331,6 @@ export async function searchVerifiedDubs(params: {
   return { count: 0, results: [] };
 }
 
-export async function triggerCatalogDubScan(refreshTitle?: string, batchSize = 10) {
-  const res = await fetch('/api/dubs/scan', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshTitle, batchSize }),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
-}
-
-export async function saveAdminDubRecord(record: any) {
-  const res = await fetch('/api/dubs/admin/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(record),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
-}
-
-export async function disputeAdminDubRecord(releaseId: string, reason: string) {
-  const res = await fetch('/api/dubs/admin/dispute', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ releaseId, reason }),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
-}
-
 export async function fetchDubStats() {
   try {
     const res = await fetch('/api/dubs/stats');
