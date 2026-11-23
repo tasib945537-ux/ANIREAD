@@ -17,7 +17,6 @@ import {
   FileText,
   X,
   Clock,
-  Database,
   Film,
 } from 'lucide-react';
 import {
