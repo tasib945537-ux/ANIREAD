@@ -1,6 +1,8 @@
 import { AnimeItem } from '../types/anime';
 import { VERIFIED_HINDI_ANIME_CATALOG } from './verifiedHindiAnimeCatalog';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\\/$/, '');
+
 export interface ServerHindiDubRecord {
   id: string;
   anilistId: number | null;
@@ -68,8 +70,8 @@ export function serverRecordToAnimeItem(r: ServerHindiDubRecord, idx: number = 0
     title: r.title,
     englishTitle: r.englishTitle || r.title,
     nativeTitle: r.original_title || r.title,
-    coverImage: r.coverImage || `/api/anime-cover?title=${encodeURIComponent(r.title)}&malId=${r.malId || ''}`,
-    bannerImage: r.bannerImage || r.coverImage || `/api/anime-cover?title=${encodeURIComponent(r.title)}`,
+    coverImage: r.coverImage || `${API_BASE_URL}/api/anime-cover?title=${encodeURIComponent(r.title)}&malId=${r.malId || ''}`,
+    bannerImage: r.bannerImage || r.coverImage || `${API_BASE_URL}/api/anime-cover?title=${encodeURIComponent(r.title)}`,
     format: r.type,
     status:
       r.dub_status === 'Announced'
