@@ -99,8 +99,9 @@ export function loadOfflineCatalog(forceReload = false): void {
   if (isLoaded && !forceReload) return;
   const dbPath = path.join(process.cwd(), 'data', 'raw', 'anime-offline-database-minified.json');
   if (!fs.existsSync(dbPath)) {
-    isLoaded = true;
+    isLoaded = false;
     catalogEntries = [];
+    console.warn('[OfflineCatalog] Dataset missing. Run the deployment dataset download step.');
     return;
   }
 
