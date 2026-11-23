@@ -1,0 +1,366 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 0: Default Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HARDENED HELPERS ---
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isVerifiedUser() && (
+        request.auth.token.email == 'gamerbangla436@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function hasValidParentUser(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId)) &&
+        get(/databases/$(database)/documents/users/$(userId)).data.uid == request.auth.uid;
+    }
+
+    function isStringBounded(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isBoundedStringArray(arr, maxItems, maxItemLen) {
+      return arr is list &&
+        arr.size() <= maxItems &&
+        (arr.size() == 0 || (arr[0] is string && arr[0].size() <= maxItemLen));
+    }
+
+    // --- ENTITY VALIDATION BLUEPRINTS ---
+    function isValidUserPublicProfile(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'displayName', 'photoURL', 'role', 'createdAt', 'updatedAt']) &&
+        isValidId(data.uid) &&
+        isStringBounded(data.displayName, 1, 100) &&
+        (!('photoURL' in data) || isStringBounded(data.photoURL, 0, 500)) &&
+        data.role == 'user' &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivateData(data) {
+      return data.keys().hasAll(['userId', 'email', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['userId', 'email', 'createdAt', 'updatedAt']) &&
+        isValidId(data.userId) &&
+        isStringBounded(data.email, 3, 254) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidMyDubListEntry(data) {
+      return data.keys().hasAll([
+          'id', 'userId', 'animeId', 'title', 'coverImage',
+          'dubLanguages', 'verifiedPlatforms', 'status', 'episodesWatched',
+          'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'userId', 'animeId', 'title', 'coverImage',
+          'dubLanguages', 'verifiedPlatforms', 'status', 'episodesWatched',
+          'totalEpisodes', 'primaryWatchUrl', 'notes', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.userId) &&
+        data.animeId is int && data.animeId > 0 &&
+        isStringBounded(data.title, 1, 240) &&
+        isStringBounded(data.coverImage, 0, 600) &&
+        isBoundedStringArray(data.dubLanguages, 10, 40) &&
+        isBoundedStringArray(data.verifiedPlatforms, 10, 80) &&
+        data.status in ['watching', 'completed', 'plan_to_watch', 'on_hold'] &&
+        data.episodesWatched is int && data.episodesWatched >= 0 && data.episodesWatched <= 10000 &&
+        (!('totalEpisodes' in data) || (data.totalEpisodes is int && data.totalEpisodes >= 0 && data.totalEpisodes <= 10000)) &&
+        (!('primaryWatchUrl' in data) || isStringBounded(data.primaryWatchUrl, 0, 600)) &&
+        (!('notes' in data) || isStringBounded(data.notes, 0, 500)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidFavoriteEntry(data) {
+      return data.keys().hasAll([
+          'id', 'userId', 'mediaId', 'mediaType', 'title', 'coverImage', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'userId', 'mediaId', 'mediaType', 'title', 'coverImage', 'score', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.userId) &&
+        data.mediaId is int && data.mediaId > 0 &&
+        data.mediaType in ['anime', 'manga'] &&
+        isStringBounded(data.title, 1, 240) &&
+        isStringBounded(data.coverImage, 0, 600) &&
+        (!('score' in data) || ((data.score is number || data.score is int) && data.score >= 0 && data.score <= 10)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidReadingProgressEntry(data) {
+      return data.keys().hasAll([
+          'id', 'userId', 'mangaId', 'mangaTitle', 'lastChapterId',
+          'lastChapterNumber', 'lastPage', 'totalPages', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'userId', 'mangaId', 'mangaTitle', 'coverImage', 'lastChapterId',
+          'lastChapterNumber', 'lastPage', 'totalPages', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.userId) &&
+        data.mangaId is int && data.mangaId > 0 &&
+        isStringBounded(data.mangaTitle, 1, 240) &&
+        (!('coverImage' in data) || isStringBounded(data.coverImage, 0, 600)) &&
+        isStringBounded(data.lastChapterId, 1, 160) &&
+        isStringBounded(data.lastChapterNumber, 1, 32) &&
+        data.lastPage is int && data.lastPage >= 0 && data.lastPage <= 10000 &&
+        data.totalPages is int && data.totalPages >= 0 && data.totalPages <= 10000 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidHindiDubOverride(data) {
+      return data.keys().hasAll([
+          'id', 'animeId', 'title', 'dubStatus', 'platforms', 'verifiedByUid', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'animeId', 'title', 'dubStatus', 'platforms', 'hindiEpisodeCount',
+          'sourceUrl', 'verifiedByUid', 'notes', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        data.animeId is int && data.animeId > 0 &&
+        isStringBounded(data.title, 1, 240) &&
+        data.dubStatus in ['Complete', 'Partial', 'Announced'] &&
+        isBoundedStringArray(data.platforms, 10, 80) &&
+        (!('hindiEpisodeCount' in data) || (data.hindiEpisodeCount is int && data.hindiEpisodeCount >= 0 && data.hindiEpisodeCount <= 10000)) &&
+        (!('sourceUrl' in data) || isStringBounded(data.sourceUrl, 0, 600)) &&
+        isValidId(data.verifiedByUid) &&
+        (!('notes' in data) || isStringBounded(data.notes, 0, 500)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // --- COLLECTION RULES ---
+
+    // 1. Public User Profiles (No PII)
+    match /users/{userId} {
+      allow get: if isVerifiedUser() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if false;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidUserPublicProfile(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        incoming().uid == userId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isOwner(userId);
+
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidUserPublicProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().role == existing().role &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt']))
+        );
+
+      allow delete: if isAdmin();
+
+      // 2. Private PII Subcollection
+      match /private/{docId} {
+        allow get: if isVerifiedUser() && isValidId(userId) && isValidId(docId) && (isOwner(userId) || isAdmin());
+        allow list: if false;
+
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          docId == 'info' &&
+          isValidUserPrivateData(incoming()) &&
+          incoming().userId == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isOwner(userId) &&
+          hasValidParentUser(userId);
+
+        allow update: if isVerifiedUser() &&
+          isValidId(userId) &&
+          docId == 'info' &&
+          isValidUserPrivateData(incoming()) &&
+          incoming().userId == existing().userId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time && (
+            isAdmin() ||
+            (isOwner(userId) &&
+              hasValidParentUser(userId) &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['email', 'updatedAt']))
+          );
+
+        allow delete: if isAdmin();
+      }
+
+      // 3. My Dub List (mydublis) Subcollection
+      match /dubList/{entryId} {
+        allow get: if isVerifiedUser() && isValidId(userId) && isValidId(entryId) && (isOwner(userId) || isAdmin());
+        allow list: if isVerifiedUser() && request.auth.uid == userId && resource.data.userId == request.auth.uid;
+
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(entryId) &&
+          isValidMyDubListEntry(incoming()) &&
+          incoming().id == entryId &&
+          incoming().userId == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isOwner(userId) &&
+          hasValidParentUser(userId);
+
+        allow update: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(entryId) &&
+          isValidMyDubListEntry(incoming()) &&
+          incoming().id == existing().id &&
+          incoming().userId == existing().userId &&
+          incoming().animeId == existing().animeId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time && (
+            isAdmin() ||
+            (isOwner(userId) && hasValidParentUser(userId) && (
+              (incoming().diff(existing()).affectedKeys().hasOnly(['status', 'episodesWatched', 'totalEpisodes', 'notes', 'updatedAt'])) ||
+              (incoming().diff(existing()).affectedKeys().hasOnly(['title', 'coverImage', 'dubLanguages', 'verifiedPlatforms', 'totalEpisodes', 'primaryWatchUrl', 'updatedAt']))
+            ))
+          );
+
+        allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(entryId) && (isOwner(userId) || isAdmin());
+      }
+
+      // 4. Favorites Subcollection
+      match /favorites/{favId} {
+        allow get: if isVerifiedUser() && isValidId(userId) && isValidId(favId) && (isOwner(userId) || isAdmin());
+        allow list: if isVerifiedUser() && request.auth.uid == userId && resource.data.userId == request.auth.uid;
+
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(favId) &&
+          isValidFavoriteEntry(incoming()) &&
+          incoming().id == favId &&
+          incoming().userId == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isOwner(userId) &&
+          hasValidParentUser(userId);
+
+        allow update: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(favId) &&
+          isValidFavoriteEntry(incoming()) &&
+          incoming().id == existing().id &&
+          incoming().userId == existing().userId &&
+          incoming().mediaId == existing().mediaId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time && (
+            isAdmin() ||
+            (isOwner(userId) &&
+              hasValidParentUser(userId) &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['title', 'coverImage', 'score', 'updatedAt']))
+          );
+
+        allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(favId) && (isOwner(userId) || isAdmin());
+      }
+
+      // 5. Manga Reading Progress Subcollection
+      match /readingProgress/{mangaId} {
+        allow get: if isVerifiedUser() && isValidId(userId) && isValidId(mangaId) && (isOwner(userId) || isAdmin());
+        allow list: if isVerifiedUser() && request.auth.uid == userId && resource.data.userId == request.auth.uid;
+
+        allow create: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(mangaId) &&
+          isValidReadingProgressEntry(incoming()) &&
+          incoming().id == mangaId &&
+          incoming().userId == request.auth.uid &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time &&
+          isOwner(userId) &&
+          hasValidParentUser(userId);
+
+        allow update: if isVerifiedUser() &&
+          isValidId(userId) &&
+          isValidId(mangaId) &&
+          isValidReadingProgressEntry(incoming()) &&
+          incoming().id == existing().id &&
+          incoming().userId == existing().userId &&
+          incoming().mangaId == existing().mangaId &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time && (
+            isAdmin() ||
+            (isOwner(userId) &&
+              hasValidParentUser(userId) &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['mangaTitle', 'coverImage', 'lastChapterId', 'lastChapterNumber', 'lastPage', 'totalPages', 'updatedAt']))
+          );
+
+        allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(mangaId) && (isOwner(userId) || isAdmin());
+      }
+    }
+
+    // 6. Admin Verified Hindi Dub Overrides
+    match /hindiDubOverrides/{overrideId} {
+      allow get: if isValidId(overrideId);
+      allow list: if resource.data.dubStatus in ['Complete', 'Partial', 'Announced'];
+
+      allow create: if isVerifiedUser() &&
+        isValidId(overrideId) &&
+        isValidHindiDubOverride(incoming()) &&
+        incoming().id == overrideId &&
+        incoming().verifiedByUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        isAdmin();
+
+      allow update: if isVerifiedUser() &&
+        isValidId(overrideId) &&
+        isValidHindiDubOverride(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().animeId == existing().animeId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        isAdmin() &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'title', 'dubStatus', 'platforms', 'hindiEpisodeCount',
+          'sourceUrl', 'verifiedByUid', 'notes', 'updatedAt'
+        ]);
+
+      allow delete: if isAdmin() && isValidId(overrideId);
+    }
+
+    // 7. Trusted Admins Lookup Collection
+    match /admins/{uid} {
+      allow get: if isVerifiedUser() && isValidId(uid) && (request.auth.uid == uid || isAdmin());
+      allow list, create, update, delete: if false;
+    }
+  }
+}

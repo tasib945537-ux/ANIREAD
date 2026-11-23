@@ -1,0 +1,1689 @@
+{
+  "generatedAt": "2026-11-15T04:29:12.438Z",
+  "verificationDate": "2026-11-14",
+  "summary": {
+    "totalUniqueEntries": 657,
+    "completeHindiDubs": 622,
+    "partialHindiDubs": 25,
+    "announcedHindiDubs": 10,
+    "byType": {
+      "TV": 462,
+      "Movie": 133,
+      "OVA": 5,
+      "ONA": 54,
+      "Special": 3
+    },
+    "platformCounts": {
+      "Crunchyroll India": 330,
+      "Netflix India": 147,
+      "Amazon Prime Video India": 7,
+      "Anime Times India": 36,
+      "Muse India": 92,
+      "JioHotstar": 88,
+      "Sony YAY! / SonyLIV": 28,
+      "Hungama TV / Disney India": 132,
+      "Cartoon Network / Sonic / Other": 58
+    },
+    "missingCovers": 0,
+    "newlyAddedCount": 639,
+    "removedUnverifiedCount": 32,
+    "requiresFurtherVerificationCount": 93
+  },
+  "newlyAddedEntries": [
+    "Demon Slayer: Kimetsu no Yaiba Season 1",
+    "Jujutsu Kaisen Season 1",
+    "Hunter x Hunter (2011) (Hindi Dub)",
+    "One Piece (Hindi Partial Dub)",
+    "Attack on Titan Season 2",
+    "Sword Art Online Season 1",
+    "My Hero Academia Season 2",
+    "Chainsaw Man Season 1",
+    "Assassination Classroom Season 1",
+    "Mob Psycho 100 Season 1",
+    "Naruto Shippuden (Hindi Partial Dub)",
+    "My Hero Academia Season 3",
+    "Black Clover (Hindi Partial / Multi-Arc)",
+    "Haikyu!! Season 1",
+    "Spy x Family Season 1",
+    "Spy x Family (SonyLIV / JioHotstar Broadcast)",
+    "Kaguya-sama: Love Is War Season 1",
+    "Kaguya-sama: Love Is War? (Season 2)",
+    "Dr. STONE Season 1",
+    "Vinland Saga Season 1",
+    "Akame ga Kill!",
+    "My Hero Academia Season 4",
+    "Bleach (Original Series — Hindi Partial Dub)",
+    "KONOSUBA -God’s blessing on this wonderful world! Season 1",
+    "Demon Slayer: Kimetsu no Yaiba – The Movie: Mugen Train",
+    "Jujutsu Kaisen Season 2",
+    "Frieren: Beyond Journey’s End Season 1",
+    "Demon Slayer: Kimetsu no Yaiba Entertainment District Arc",
+    "Fire Force Season 1",
+    "Spirited Away",
+    "JoJo's Bizarre Adventure (2012) — Parts 1 & 2",
+    "One-Punch Man Season 2",
+    "That Time I Got Reincarnated as a Slime Season 1",
+    "The Rising of the Shield Hero Season 1",
+    "Solo Leveling Season 1",
+    "Solo Leveling: Arise (Special Teaser/Announced S3)",
+    "Sword Art Online II (Season 2)",
+    "Classroom of the Elite Season 1",
+    "Mob Psycho 100 II (Season 2)",
+    "Tokyo Revengers Season 1",
+    "My Dress-Up Darling Season 1",
+    "My Hero Academia Season 5",
+    "Tokyo Ghoul √A (Season 2)",
+    "Overlord Season 1",
+    "Food Wars! Shokugeki no Soma Season 1",
+    "Haikyu!! Season 2",
+    "DanMachi: Is It Wrong to Try to Pick Up Girls in a Dungeon? Season 1",
+    "DanDaDan Season 1",
+    "Re:ZERO -Starting Life in Another World- Season 2",
+    "Fairy Tail (2009) (Hindi Partial Dub)",
+    "Demon Slayer: Kimetsu no Yaiba Swordsmith Village Arc",
+    "KONOSUBA -God’s blessing on this wonderful world! 2 (Season 2)",
+    "Assassination Classroom Season 2",
+    "Hell's Paradise Season 1",
+    "Howl's Moving Castle",
+    "Demon Slayer: Kimetsu no Yaiba Mugen Train Arc (TV)",
+    "Haikyu!! Season 3",
+    "Hyouka",
+    "JoJo's Bizarre Adventure: Stardust Crusaders",
+    "The Apothecary Diaries Season 1",
+    "Dr. STONE: STONE WARS (Season 2)",
+    "Tower of God Season 1",
+    "Oshi no Ko Season 1",
+    "Seraph of the End: Vampire Reign Season 1",
+    "Blue Lock Season 1",
+    "Mushoku Tensei: Jobless Reincarnation Season 1 Cour 2",
+    "That Time I Got Reincarnated as a Slime Season 2",
+    "Komi Can’t Communicate Season 1",
+    "To Your Eternity Season 1",
+    "Solo Leveling Season 2: Arise from the Shadow",
+    "Rent-a-Girlfriend Season 1",
+    "Goblin Slayer Season 1",
+    "Princess Mononoke",
+    "Fire Force Season 2",
+    "The God of High School",
+    "Kaguya-sama: Love Is War -Ultra Romantic- (Season 3)",
+    "Haikyu!! To the Top (Season 4)",
+    "Mashle: Magic and Muscles Season 1",
+    "Terror in Resonance",
+    "Kaiju No. 8 Season 1",
+    "Kuroko's Basketball Season 1",
+    "Demon Slayer: Kimetsu no Yaiba Hashira Training Arc",
+    "My Neighbor Totoro",
+    "My Hero Academia Season 6",
+    "Mushoku Tensei: Jobless Reincarnation Season 1 Cour 1",
+    "Mushoku Tensei: Jobless Reincarnation Season 2 Cour 1",
+    "Jujutsu Kaisen: The Culling Game (Season 3)",
+    "Overlord II (Season 2)",
+    "Mob Psycho 100 III (Season 3)",
+    "Gachiakuta",
+    "Classroom of the Elite Season 2",
+    "ReLIFE",
+    "Dragon Ball Z (Hindi Broadcast)",
+    "Beastars Season 1",
+    "Chainsaw Man – The Movie: Reze Arc",
+    "Overlord III (Season 3)",
+    "The Rising of the Shield Hero Season 2",
+    "The Ancient Magus' Bride Season 1",
+    "DanMachi Season 2",
+    "Zom 100: Bucket List of the Dead",
+    "Spy x Family Season 2",
+    "Log Horizon Season 1",
+    "Frieren: Beyond Journey’s End Season 2",
+    "Arifureta: From Commonplace to World’s Strongest Season 1",
+    "DanDaDan Season 2",
+    "Yuri!!! on ICE",
+    "Blood Blockade Battlefront Season 1",
+    "Delicious in Dungeon (Dungeon Meshi)",
+    "Sakamoto Days Cour 1",
+    "Boruto: Naruto Next Generations (Hindi Partial)",
+    "Ranking of Kings Season 1",
+    "My Hero Academia: Two Heroes",
+    "The Fragrant Flower Blooms with Dignity",
+    "Mushoku Tensei: Jobless Reincarnation Season 2 Cour 2",
+    "Heavenly Delusion",
+    "The Apothecary Diaries Season 2",
+    "Bleach: Thousand-Year Blood War Part 1",
+    "Alya Sometimes Hides Her Feelings in Russian Season 1",
+    "The World’s Finest Assassin Gets Reincarnated in Another World as an Aristocrat",
+    "Demon Slayer: Kimetsu no Yaiba – Infinity Castle",
+    "Dr. STONE: NEW WORLD (Season 3)",
+    "Re:ZERO -Starting Life in Another World- Season 3",
+    "Cells at Work! Season 1",
+    "DanMachi Season 3",
+    "My Dress-Up Darling Season 2",
+    "Shangri-La Frontier Season 1",
+    "Wind Breaker Season 1",
+    "Wind Breaker Season 3",
+    "That Time I Got Reincarnated as a Slime Season 3",
+    "Classroom of the Elite Season 3",
+    "My Hero Academia Season 7",
+    "Ponyo",
+    "Kiki's Delivery Service",
+    "Grimgar, Ashes and Illusions",
+    "Bofuri: I Don’t Want to Get Hurt, so I’ll Max Out My Defense Season 1",
+    "Kuroko's Basketball Season 2",
+    "KONOSUBA -God’s blessing on this wonderful world! 3 (Season 3)",
+    "Wistoria: Wand and Sword Season 1",
+    "Oshi no Ko Season 2",
+    "Overlord IV (Season 4)",
+    "Tomo-chan Is a Girl!",
+    "Tsukimichi -Moonlit Fantasy- Season 1",
+    "Mushoku Tensei Season 3",
+    "My Hero Academia: Heroes Rising",
+    "Welcome to Demon School! Iruma-kun Season 1",
+    "Attack on Titan: The Final Season Final Chapters",
+    "Komi Can’t Communicate Season 2",
+    "Horimiya: The Missing Pieces",
+    "Akudama Drive",
+    "Kuroko's Basketball Season 3",
+    "Mieruko-chan",
+    "In/Spectre Season 1",
+    "The Way of the Househusband Season 1",
+    "Kaiju No. 8 Season 2",
+    "Moriarty the Patriot Part 1 & 2",
+    "Blue Box",
+    "One-Punch Man Season 3",
+    "Wandering Witch: The Journey of Elaina",
+    "The Rising of the Shield Hero Season 3",
+    "Kaguya-sama: Love Is War -The First Kiss That Never Ends-",
+    "Pokémon: Indigo League",
+    "Pokémon: Adventures in the Orange Islands",
+    "Pokémon: The Johto Journeys",
+    "Pokémon: Johto League Champions",
+    "Pokémon: Master Quest",
+    "My Next Life as a Villainess: All Routes Lead to Doom! Season 1",
+    "Bleach: Thousand-Year Blood War Part 2",
+    "Blue Lock Season 2",
+    "Tokyo Revengers: Christmas Showdown (Season 2)",
+    "My Happy Marriage Season 1",
+    "Evangelion: 1.11 You Are (Not) Alone",
+    "The Daily Life of the Immortal King Season 1",
+    "A Sign of Affection",
+    "Seirei Gensouki: Spirit Chronicles Season 1",
+    "Baki (2018) Part 1 & 2",
+    "Beastars Season 2",
+    "The Misfit of Demon King Academy Season 1",
+    "The Misfit of Demon King Academy II",
+    "My Hero Academia Season 8 (Final Season)",
+    "Rent-a-Girlfriend Season 2",
+    "100 Girlfriends Who Really, Really, Really, Really, Really Love You Season 1",
+    "Evangelion: 2.22 You Can (Not) Advance",
+    "Makeine: Too Many Losing Heroines!",
+    "Arifureta: From Commonplace to World’s Strongest Season 2",
+    "Trapped in a Dating Sim: The World of Otome Games is Tough for Mobs",
+    "Record of Ragnarok Season 1",
+    "Fire Force Season 3",
+    "The Detective Is Already Dead",
+    "The Wrong Way to Use Healing Magic Season 1",
+    "DanMachi Season 4 Part 1 & 2",
+    "To Be Hero X",
+    "Buddy Daddies",
+    "Look Back (2024)",
+    "Banished from the Hero’s Party, I Decided to Live a Quiet Life in the Countryside Season 1",
+    "Orb: On the Movements of the Earth",
+    "Dragon Ball Super: Broly",
+    "Dr. STONE Special Episode: RYUSUI",
+    "Tower of God Season 2",
+    "Skeleton Knight in Another World",
+    "Evangelion: 3.33 You Can (Not) Redo",
+    "Bleach: Thousand-Year Blood War Part 3",
+    "Tsukimichi -Moonlit Fantasy- Season 2",
+    "Campfire Cooking in Another World with My Absurd Skill Season 1",
+    "NieR:Automata Ver1.1a",
+    "Goblin Slayer II (Season 2)",
+    "Dr. STONE: SCIENCE FUTURE (Season 4)",
+    "Evangelion: 3.0+1.01 Thrice Upon a Time",
+    "Shangri-La Frontier Season 2",
+    "A Couple of Cuckoos Season 1",
+    "Farming Life in Another World",
+    "Re:ZERO: Memory Snow",
+    "Re:ZERO: The Frozen Bond",
+    "The Genius Prince's Guide to Raising a Nation Out of Debt",
+    "The Apothecary Diaries Season 3",
+    "The Faraway Paladin Season 1",
+    "Welcome to Demon School! Iruma-kun Season 2",
+    "To Your Eternity Season 2",
+    "That Time I Got Reincarnated as a Slime the Movie: Scarlet Bond",
+    "I Was Reincarnated as the 7th Prince so I Can Take My Time Perfecting My Magical Ability Season 1",
+    "I Was Reincarnated as the 7th Prince Season 2",
+    "Sakamoto Days Cour 2",
+    "Spy x Family CODE: White",
+    "Chillin’ in Another World with Level 2 Super Cheat Powers",
+    "My Hero Academia: World Heroes’ Mission",
+    "Wind Breaker Season 2",
+    "Black Clover: Sword of the Wizard King",
+    "Witch Watch",
+    "The Reincarnation of the Strongest Exorcist in Another World",
+    "That Time I Got Reincarnated as a Slime: The Slime Diaries",
+    "Haikyu!! The Dumpster Battle",
+    "Dead Mount Death Play",
+    "Dragon Ball Z Kai",
+    "Naruto (Original Series)",
+    "Ultraman: Rising",
+    "The Witcher: Nightmare of the Wolf",
+    "Castlevania Season 1–4",
+    "Castlevania: Nocturne Season 1",
+    "DOTA: Dragon’s Blood Book 1–3",
+    "Blood of Zeus Season 1–2",
+    "Pacific Rim: The Black Season 1",
+    "Pacific Rim: The Black Season 2",
+    "Beyblade: Shogun Steel",
+    "Solo Leveling Season 1 OVA / Recap Ep 7.5",
+    "Star Wars: Visions Volume 2",
+    "Demon Slayer: Kimetsu no Yaiba – To the Hashira Training",
+    "Demon Slayer: Kimetsu no Yaiba – To the Swordsmith Village",
+    "My Daemon",
+    "Tomb Raider: The Legend of Lara Croft Season 1",
+    "Blood of Zeus Season 3",
+    "Castlevania: Nocturne Season 2",
+    "VTuber Legend: How I Went Viral after Forgetting to Turn Off My Stream",
+    "The Beginning After the End",
+    "Failure Frame: I Became the Strongest and Annihilated Everything With Low-Level Spells",
+    "The Water Magician",
+    "Pseudo Harem",
+    "Suppose a Kid from the Last Dungeon Boonies Moved to a Starter Town",
+    "The Ice Guy and His Cool Female Colleague",
+    "No Longer Allowed in Another World",
+    "Hokkaido Gals Are Super Adorable!",
+    "Clevatess",
+    "The Elusive Samurai Season 1",
+    "I Parry Everything",
+    "Bubble",
+    "7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!",
+    "The Reincarnated Princess and the Genius Young Lady",
+    "Dr. STONE: SCIENCE FUTURE Cour 2",
+    "Parallel World Pharmacy",
+    "The Dreaming Boy Is a Realist",
+    "Bofuri: I Don’t Want to Get Hurt, so I’ll Max Out My Defense Season 2",
+    "Tokyo Revengers: Tenjiku Arc (Season 3)",
+    "The Aristocrat’s Otherworldly Adventure: Serving Gods Who Go Too Far",
+    "Kamikatsu: Working for God in a Godless World",
+    "That Time I Got Reincarnated as a Slime OAD 1–5",
+    "The Unwanted Undead Adventurer",
+    "DanMachi Season 5",
+    "Yu-Gi-Oh! Duel Monsters",
+    "Mushoku Tensei OVA: Eris the Goblin Slayer",
+    "Sweetness & Lightning",
+    "Am I Actually the Strongest?",
+    "The Kingdoms of Ruin",
+    "Days with My Stepsister",
+    "The Ossan Newbie Adventurer, Trained to Death by the Most Powerful Party, Became Invincible",
+    "Tougen Anki",
+    "An Archdemon's Dilemma: How to Love Your Elf Bride",
+    "100 Girlfriends Who Really, Really, Really, Really, Really Love You Season 2",
+    "As a Reincarnated Aristocrat, I’ll Use My Appraisal Skill to Rise in the World Season 1",
+    "Detective Conan / Case Closed (Hindi Partial)",
+    "villainess Level 99: I May Be the Hidden Boss but I’m Not the Demon Lord",
+    "Beast Tamer",
+    "Go! Go! Loser Ranger! Season 1",
+    "One Piece Film: Red",
+    "I Got Married to a Girl I Hate Most in Class",
+    "The Brilliant Healer’s New Life in the Shadows",
+    "Arifureta: From Commonplace to World’s Strongest Season 3",
+    "Mission: Yozakura Family",
+    "May I Ask for One Final Thing?",
+    "Black Torch",
+    "Handyman Saitou in Another World",
+    "A Returner's Magic Should Be Special",
+    "Seirei Gensouki: Spirit Chronicles Season 2",
+    "Dragon Ball Z: Battle of Gods",
+    "Welcome to Demon School! Iruma-kun Season 3",
+    "My Hero Academia: Vigilantes",
+    "Zenshu",
+    "Rent-a-Girlfriend Season 3",
+    "The Fruit of Evolution: Before I Knew It, My Life Had It Made Season 1",
+    "Let This Grieving Soul Retire",
+    "Re:Monster Season 1 (CR)",
+    "Digimon Adventure (1999)",
+    "Reborn as a Vending Machine, I Now Wander the Dungeon Season 1",
+    "The Witch and the Beast",
+    "The Daily Life of the Immortal King Season 2",
+    "Ningen Fushin: Adventurers Who Don’t Believe in Humanity Will Save the World",
+    "2.5 Dimensional Seduction",
+    "Loner Life in Another World",
+    "Can a Boy-Girl Friendship Survive?",
+    "Ranma ½ (2024)",
+    "Overlord: The Sacred Kingdom",
+    "Overlord Season 5 / Movie Continuation",
+    "I May Be a Guild Receptionist, But I’ll Solo Any Boss to Clock Out on Time",
+    "Radiant Season 1",
+    "Devil May Cry (2025)",
+    "Record of Ragnarok Season 2",
+    "Honey Lemon Soda",
+    "Even Given the Worthless [Appraiser] Class, I’m Actually the Strongest",
+    "SHOSHIMIN: How to Become Ordinary Season 1",
+    "Baki Hanma Season 1",
+    "Reborn to Master the Blade: From Hero-King to Extraordinary Squire",
+    "Demon Lord 2099 Season 1",
+    "Inazuma Eleven",
+    "Pokémon: The First Movie – Mewtwo Strikes Back",
+    "Banished from the Hero’s Party Season 2",
+    "Dragon Ball DAIMA",
+    "Possibly the Greatest Alchemist of All Time",
+    "My Happy Marriage Season 2",
+    "Dragon Ball Z: Resurrection ‘F’",
+    "The Foolish Angel Dances with the Devil",
+    "Unnamed Memory Season 1",
+    "Shaman King (2001)",
+    "SK8 the Infinity",
+    "The Cafe Terrace and Its Goddesses Season 1",
+    "Why Does Nobody Remember Me in This World?",
+    "Medaka Kuroiwa Is Impervious to My Charms",
+    "Fairy Tail: 100 Years Quest",
+    "In/Spectre Season 2",
+    "The Most Notorious \"Talker\" Runs the World’s Greatest Clan",
+    "My Unique Skill Makes Me OP even at Level 1",
+    "Please Put Them On, Takamine-san",
+    "A Condition Called Love",
+    "Tales of Wedding Rings Season 1",
+    "Baki: The Great Raitai Tournament Saga",
+    "I’ll Become a Villainess Who Goes Down in History",
+    "Classroom for Heroes",
+    "Junji Ito Collection",
+    "I Left My A-Rank Party to Help My Former Students Reach the Dungeon Depths!",
+    "Bottom-Tier Character Tomozaki 2nd Stage",
+    "Maboroshi",
+    "Dragon Ball Super: Super Hero",
+    "The Weakest Tamer Began a Journey to Pick Up Trash",
+    "Ranking of Kings: The Treasure Chest of Courage",
+    "Kengan Ashura Season 1",
+    "My Tiny Senpai",
+    "As a Reincarnated Aristocrat, I’ll Use My Appraisal Skill to Rise in the World Season 2",
+    "A Wild Last Boss Appeared!",
+    "Tying the Knot with an Amagami Sister",
+    "Pokémon the Series: XY",
+    "Pokémon the Series: XY Kalos Quest",
+    "Ishura Season 1",
+    "Blue Box Season 2",
+    "Alya Sometimes Hides Her Feelings in Russian Season 2",
+    "Bartender: Glass of God",
+    "Blue Lock: Episode Nagi",
+    "That Time I Got Reincarnated as a Slime: Visions of Coleus",
+    "Lookism",
+    "The Faraway Paladin: The Lord of Rust Mountain (Season 2)",
+    "Pokémon: Advanced",
+    "Pokémon: Advanced Challenge",
+    "Pokémon: Advanced Battle",
+    "Pokémon: Battle Frontier",
+    "365 Days to the Wedding",
+    "Metallic Rouge Season 1",
+    "Headhunted to Another World: From Salaryman to Big Four!",
+    "I'm Giving the Disgraced Noble Lady I Rescued a Crash Course in Naughtiness",
+    "The Unaware Atelier Meister",
+    "Delicious in Dungeon Season 2",
+    "The Daily Life of the Immortal King Season 3",
+    "Sasaki and Peeps Season 1",
+    "Bogus Skill <<Fruitmaster>>",
+    "Pokémon: The Movie 2000 – The Power of One",
+    "2.43: Seiin High School Boys Volleyball Team",
+    "Saving 80,000 Gold in Another World for My Retirement",
+    "From Bureaucrat to Villainess: Dad’s Been Reincarnated!",
+    "Horimiya Season 1",
+    "I’m the Evil Lord of an Intergalactic Empire!",
+    "Gods' Games We Play Season 1",
+    "Baki Hanma Season 2",
+    "Pokémon 3: The Movie – Spell of the Unown",
+    "Doctor Elise: The Royal Lady with the Lamp",
+    "Pokémon the Series: XYZ",
+    "Pokémon: Diamond and Pearl",
+    "Pokémon: DP Battle Dimension",
+    "Pokémon: DP Galactic Battles",
+    "Pokémon: DP Sinnoh League Victors",
+    "Beastars Final Season Part 1",
+    "Kaii to Otome to Kamikakushi (Mysterious Disappearances)",
+    "Star Wars: Visions Volume 1",
+    "Train to the End of the World",
+    "Sweet Reincarnation",
+    "A Journey Through Another World: Raising Kids While Adventuring",
+    "The Fable",
+    "Shangri-La Frontier Season 3",
+    "Magic Maker: How to Make Magic in Another World",
+    "The Do-Over Damsel Conquers the Dragon Emperor",
+    "Pokémon 4Ever: Celebi – Voice of the Forest",
+    "Viral Hit Season 1",
+    "Digimon Adventure 02",
+    "Pokémon the Series: Sun & Moon",
+    "Pokémon the Series: Sun & Moon – Ultra Adventures",
+    "Pokémon the Series: Sun & Moon – Ultra Legends",
+    "Digimon Tamers",
+    "The Way of the Househusband Season 2",
+    "The Strongest Tank's Labyrinth Raids",
+    "Overflow",
+    "Senpai Is an Otokonoko",
+    "Scott Pilgrim Takes Off",
+    "Pokémon Journeys: The Series",
+    "Pokémon Master Journeys: The Series",
+    "Pokémon Ultimate Journeys: The Series",
+    "The Too-Perfect Saint: Tossed Aside by My Fiancé and Sold to Another Kingdom",
+    "My Daughter Left the Nest and Returned an S-Rank Adventurer",
+    "Studio Apartment, Good Lighting, Angel Included",
+    "Drifting Home",
+    "Code Geass: Rozé of the Recapture",
+    "MF Ghost Season 1",
+    "The Seven Deadly Sins: Four Knights of the Apocalypse Season 1",
+    "The Vampire Dies in No Time Season 1",
+    "Go! Go! Loser Ranger! Season 2",
+    "Pokémon Heroes: Latios and Latias",
+    "Pokémon: Black & White",
+    "Pokémon: BW Rival Destinies",
+    "ATRI -My Dear Moments-",
+    "Black Butler: Public School Arc",
+    "Kengan Ashura Season 2",
+    "Pokémon: Lucario and the Mystery of Mew",
+    "The Red Ranger Becomes an Adventurer in Another World",
+    "Dahlia in Bloom: Crafting a Fresh Start with Magical Tools",
+    "Radiant Season 2",
+    "Pokémon: The Rise of Darkrai",
+    "Pokémon: Destiny Deoxys",
+    "I Got a Cheat Skill in Another World and Became Unrivaled in the Real World, Too",
+    "Yasuke",
+    "Negative Positive Angler",
+    "The Cafe Terrace and Its Goddesses Season 2",
+    "Solo Leveling -ReAwakening-",
+    "Sakamoto Days Season 2",
+    "Beyblade: Metal Fusion",
+    "Bye Bye, Earth Season 1",
+    "The Daily Life of the Immortal King Season 4",
+    "Management of a Novice Alchemist",
+    "Nina the Starry Bride",
+    "A Salad Bowl of Eccentrics",
+    "Zatch Bell!",
+    "Bakugan Battle Brawlers",
+    "Good Night World",
+    "Pokémon: Jirachi—Wish Maker",
+    "Pokémon: Giratina and the Sky Warrior",
+    "Beyblade (2001 Original)",
+    "The Gorilla God’s Go-To Girl",
+    "Pokémon: Arceus and the Jewel of Life",
+    "Pokémon Horizons: The Series",
+    "SHOSHIMIN: How to Become Ordinary Season 2",
+    "Moonrise",
+    "Mononoke the Movie: Phantom in the Rain",
+    "Quality Assurance in Another World Season 1",
+    "Kaiju No. 8: Mission Recon",
+    "Delico's Nursery",
+    "Black Butler: Emerald Witch Arc",
+    "Pokémon: Zoroark – Master of Illusions",
+    "Unnamed Memory Season 2",
+    "I Shall Survive Using Potions!",
+    "Solo Camping for Two",
+    "Twilight Out of Focus",
+    "The Demon Prince of Momochi House",
+    "Pokémon: BW Adventures in Unova",
+    "Pokémon the Movie: I Choose You!",
+    "Crayon Shin-chan (Hindi TV Series)",
+    "Anyway, I’m Falling in Love with You",
+    "Beyblade: Metal Masters",
+    "My Oni Girl",
+    "Seraph of the End: Battle in Nagoya (Season 2)",
+    "A Terrified Teacher at Ghoul School!",
+    "MF Ghost Season 2",
+    "Pokémon the Movie: Diancie and the Cocoon of Destruction",
+    "Spriggan (2022)",
+    "The Seven Deadly Sins: Four Knights of the Apocalypse Season 2",
+    "Sgt. Frog (Keroro Gunso)",
+    "Pokémon the Movie: Genesect and the Legend Awakened",
+    "BAKI-DOU",
+    "Beyblade: Metal Fury",
+    "Natsume’s Book of Friends Season 7",
+    "Baki Hanma VS Kengan Ashura",
+    "Pokémon the Movie: Hoopa and the Clash of Ages",
+    "Trillion Game Season 1",
+    "Bakugan: New Vestroia",
+    "Pokémon the Movie: The Power of Us",
+    "Kingsglaive: Final Fantasy XV",
+    "Beyblade V-Force",
+    "Pokémon the Movie: Kyurem vs. The Sword of Justice",
+    "MF Ghost Season 3",
+    "Stand by Me Doraemon",
+    "True Beauty (2024)",
+    "Ghost in the Shell: SAC_2045 Season 1",
+    "Pokémon the Movie: Black – Victini and Reshiram",
+    "Lost in Starlight",
+    "Beyblade Burst",
+    "Scarlet",
+    "Pokémon the Movie: Secrets of the Jungle",
+    "Digimon Fusion (Xros Wars)",
+    "Pokémon the Movie: Volcanion and the Mechanical Marvel",
+    "Beyblade G-Revolution",
+    "Tekken: Bloodline",
+    "Terminator Zero",
+    "Mecha-Ude: Mechanical Arms",
+    "Rising Impact Season 1",
+    "Mononoke the Movie: Chapter II – The Ashes of Rage",
+    "BASTARD!! -Heavy Metal, Dark Fantasy- Season 1",
+    "Pokémon Concierge",
+    "Pokémon: Mewtwo Strikes Back – Evolution",
+    "Final Fantasy: The Spirits Within",
+    "Sand Land: The Series",
+    "Murai in Love",
+    "Mobile Suit Gundam Hathaway: The Sorcery of Nymph Circe",
+    "BASTARD!! -Heavy Metal, Dark Fantasy- Season 2",
+    "Ultraman Season 1",
+    "Dinosaur King",
+    "Sakuna: Of Rice and Ruin",
+    "The Seven Deadly Sins: Grudge of Edinburgh Part 1",
+    "Bye Bye, Earth Season 2",
+    "Akuma-kun",
+    "Beyblade Burst Evolution",
+    "Doraemon (2005 TV Series)",
+    "Stand by Me Doraemon 2",
+    "Adam’s Sweet Agony",
+    "Capeta",
+    "Leviathan",
+    "Idaten Jump",
+    "Onimusha",
+    "Beyblade Burst Turbo",
+    "The Imaginary",
+    "Kochira Katsushika-ku Kameari Kouen-mae Hashutsujo (Kochikame)",
+    "Detective Conan: The Culprit Hanzawa",
+    "Ghost in the Shell: SAC_2045 Season 2",
+    "Doraemon: Nobita’s Dinosaur 2006",
+    "Doraemon: Nobita and the Steel Troops – Winged Angels",
+    "Mirmo Zibang!",
+    "Beyblade X",
+    "Shin-chan: The Adult Empire Strikes Back",
+    "T·P BON Season 1",
+    "T·P BON Season 2",
+    "Garouden: The Way of the Lone Wolf",
+    "Rising Impact Season 2",
+    "Doraemon: Nobita’s Great Adventure into the Underworld",
+    "Doraemon: Nobita and the Green Giant Legend",
+    "Appleseed Alpha",
+    "Onmyoji",
+    "Beyblade Burst Rise",
+    "Doraemon: Nobita’s Dorabian Nights",
+    "Doraemon: Nobita’s Secret Gadget Museum",
+    "Shin-chan: The Hidden Treasure of the Buri Buri Kingdom",
+    "Doraemon: Nobita and the Windmasters",
+    "Ninja Hattori-kun (1981 / 2012)",
+    "Ninja Hattori-kun: NinNin Furusato Daisakusen no Maki",
+    "Shin-chan: Action Kamen vs. Leotard Devil",
+    "Beyblade Burst Surge",
+    "Shin-chan: Bungle in the Jungle",
+    "Shin-chan: Great Adventure in Henderland",
+    "Ultraman Season 2",
+    "Phoenix: Eden17",
+    "Altered Carbon: Resleeved",
+    "Shin-chan: Pursuit of the Balls of Darkness",
+    "Doraemon: Nobita’s Treasure Island",
+    "Doraemon: Nobita in the Robot Kingdom",
+    "Doraemon: Nobita and the Legend of the Sun King",
+    "Battle B-Daman",
+    "Doraemon: Nobita and the Kingdom of Clouds",
+    "Doraemon: Nobita’s Galaxy Super-express",
+    "Doraemon: Nobita’s Three Visionary Swordsmen",
+    "Yoasobi Gurashi!",
+    "Crayon Shin-chan: Super-Dimension! The Storm Called My Bride",
+    "Doraemon: Nobita and the Island of Miracles – Animal Adventure",
+    "Doraemon: Nobita and the Animal Planet",
+    "Doraemon: Nobita’s Space Heroes",
+    "Doraemon: Nobita’s Great Battle of the Mermaid King",
+    "Lupin the 3rd vs. Cat’s Eye",
+    "Doraemon: Nobita’s Great Adventure in the South Seas",
+    "Beyblade Burst QuadDrive",
+    "Doraemon: Nobita in the Wannyan Spacetime Odyssey",
+    "Doraemon: Nobita’s New Dinosaur",
+    "Shin-chan: My Moving Story! Cactus Large Attack!",
+    "Iron Man: Rise of Technovore",
+    "Shin-chan: The Battle of the Warring States",
+    "Shin-chan: The Spy Called Shin-chan",
+    "Doraemon: Nobita’s Winged Braves",
+    "Kiteretsu Daihyakka",
+    "The Tibetan Dog",
+    "Doraemon: Nobita’s Little Space War",
+    "Shin-chan: Blitzkrieg! Pig’s Hoof’s Secret Mission",
+    "Shin-chan: Glorious Grilled Yakiniku Road",
+    "Ultraman Final Season",
+    "Doraemon: Nobita’s Chronicle of the Moon Exploration",
+    "Doraemon: Nobita and the Tin Labyrinth",
+    "Ninja Boy Rantaro",
+    "Doraemon: Nobita’s Great Adventure in the Antarctic Kachi Kochi",
+    "Shin-chan: The Legend Called Dance! Amigo!",
+    "Doraemon: Nobita and the Birth of Japan 2016",
+    "Doraemon: Nobita’s Sky Utopia",
+    "Doraemon: Nobita’s Diary on the Creation of the World",
+    "Doraemon: Nobita’s Space Drifters",
+    "Chibi Maruko-chan",
+    "Atashin’chi",
+    "Doraemon: Nobita’s Little Star Wars 2021",
+    "Perman (1983)",
+    "Doraemon: Nobita’s Earth Symphony",
+    "Luckyman (Tottemo! Luckyman)",
+    "Crayon Shin-chan: Fast Asleep! The Great Assault on Dreamy World!",
+    "Crayon Shin-chan: Invasion!! Alien Shiriri",
+    "The Share House’s Secret Rule",
+    "Doraemon: Nobita and the Spiral City",
+    "Crayon Shin-chan: Burst Serving! Kung Fu Boys ~Ramen Rebellion~",
+    "Crayon Shin-chan: Honeymoon Hurricane ~The Lost Hiroshi~",
+    "Taisho Era Contract Marriage",
+    "Bucchigiri?!",
+    "Tsurupika Hagemaru",
+    "Ultra B",
+    "Gamera -Rebirth-",
+    "Shin-chan: The Spicy Kasukabe Dancers in India",
+    "Transformer: Armada",
+    "Perman: Birdman Has Come!",
+    "Shin-chan: Very Tasty! B-class Gourmet Survival!!"
+  ],
+  "removedUnverifiedEntries": [
+    {
+      "title": "Cyberpunk: Edgerunners",
+      "reason": "Confirmed Japanese/English/subs only on Netflix India — NO official Hindi audio dub."
+    },
+    {
+      "title": "The Eminence in Shadow (Season 1 & 2)",
+      "reason": "Subtitles only in India across Crunchyroll/HIDIVE — NO official Hindi audio dub."
+    },
+    {
+      "title": "Bocchi the Rock!",
+      "reason": "Confirmed Japanese audio & subtitles only — NO official Hindi audio dub."
+    },
+    {
+      "title": "Monster",
+      "reason": "Subtitles only on Netflix India — NO official Hindi audio dub."
+    },
+    {
+      "title": "A Silent Voice (Koe no Katachi)",
+      "reason": "Japanese/English audio only — NO official Hindi audio dub."
+    },
+    {
+      "title": "Violet Evergarden (TV & Movies)",
+      "reason": "Japanese/English audio only on Netflix India — NO official Hindi audio dub."
+    },
+    {
+      "title": "Your Lie in April",
+      "reason": "Japanese/English audio only — NO official Hindi audio dub."
+    },
+    {
+      "title": "Toradora!",
+      "reason": "Japanese/English audio only — NO official Hindi audio dub."
+    },
+    {
+      "title": "Steins;Gate",
+      "reason": "Marked NOT_AVAILABLE in normalized DB yet erroneously placed in old Verified Hindi catalog — NO official Hindi dub."
+    },
+    {
+      "title": "Code Geass: Lelouch of the Rebellion R1 & R2",
+      "reason": "Original Lelouch series has NO Hindi dub (only 2024 ONA Code Geass: Rozé of the Recapture has Hindi on JioHotstar)."
+    },
+    {
+      "title": "Berserk (1997 / 2016)",
+      "reason": "NO official Hindi audio dub."
+    },
+    {
+      "title": "Black Lagoon",
+      "reason": "NO official Hindi audio dub."
+    },
+    {
+      "title": "The Promised Neverland",
+      "reason": "NO official platform Hindi dub."
+    },
+    {
+      "title": "Dororo (2019)",
+      "reason": "NO official platform Hindi dub."
+    },
+    {
+      "title": "Banana Fish",
+      "reason": "Japanese audio & subtitles only — NO official Hindi dub."
+    },
+    {
+      "title": "Noragami & Noragami Aragoto",
+      "reason": "NO official Hindi audio dub."
+    },
+    {
+      "title": "Psycho-Pass (Season 1 & 2)",
+      "reason": "NO official Hindi audio dub."
+    },
+    {
+      "title": "Bungo Stray Dogs (Seasons 1–5)",
+      "reason": "Crunchyroll India confirmed sub/English only — NO official Hindi dub (only unofficial YouTube fandubs exist)."
+    },
+    {
+      "title": "Blue Exorcist (All Seasons)",
+      "reason": "Crunchyroll India confirmed sub only — NO official Hindi dub."
+    },
+    {
+      "title": "No Game No Life",
+      "reason": "Confirmed sub/Japanese only in India — NO official Hindi dub."
+    },
+    {
+      "title": "Parasyte -the maxim-",
+      "reason": "Original anime series lacks official Hindi dub (only live-action Parasyte: The Grey on Netflix has Hindi)."
+    },
+    {
+      "title": "Link Click Season 1 & 2",
+      "reason": "Chinese/Japanese/English only — NO official Hindi dub."
+    },
+    {
+      "title": "Heaven Official's Blessing",
+      "reason": "Chinese/Japanese/English only — NO official Hindi dub."
+    },
+    {
+      "title": "Scissor Seven Seasons 1–4",
+      "reason": "Mandarin/Japanese/English only on Netflix India — NO official Hindi dub."
+    },
+    {
+      "title": "Yu Yu Hakusho (Anime)",
+      "reason": "Animax India aired English dub only; only the live-action adaptation on Netflix has Hindi audio."
+    },
+    {
+      "title": "Slam Dunk / Initial D / City Hunter / Cardcaptor Sakura / Sailor Moon",
+      "reason": "Legacy Animax/Cartoon Network broadcasts aired in English or subbed; no verified official Hindi anime dub."
+    },
+    {
+      "title": "Pluto / Kotaro Lives Alone / Romantic Killer / Blue Period",
+      "reason": "Confirmed Netflix India English/Japanese only — NO official Hindi audio dub."
+    },
+    {
+      "title": "Jujutsu Kaisen 0 (Movie)",
+      "reason": "NO official Hindi audio track on Crunchyroll India or Netflix India streaming."
+    },
+    {
+      "title": "Detective Conan Movies 1–10 (Unverified Batch bx58xxx)",
+      "reason": "Unverified bulk entries with synthetic bx{malId} broken poster links removed."
+    },
+    {
+      "title": "DARLING in the FRANXX",
+      "reason": "Removed false Hindi franchise keyword match (available in Japanese/English/subs only)."
+    },
+    {
+      "title": "By the Grace of the Gods / Iceblade Sorcerer / Noblesse / Special A / Ultra Maniac / Midori Days",
+      "reason": "Unverified/synthetic old catalog filler without official Hindi dub evidence removed."
+    },
+    {
+      "title": "278 Fake Sequential Expanded Entries (IDs 300001–300278)",
+      "reason": "Removed duplicate/unverified/broken-poster expanded entries."
+    }
+  ],
+  "entriesRequiringVerification": [
+    {
+      "title": "Hunter x Hunter (2011) (Hindi Dub)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Muse India",
+        "Crunchyroll India"
+      ],
+      "notes": "75+ episodes officially dubbed in Hindi via Muse India & Crunchyroll India."
+    },
+    {
+      "title": "One Piece (Hindi Partial Dub)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Crunchyroll India",
+        "Netflix India"
+      ],
+      "notes": "Selected arcs dubbed in Hindi (Episodes 1–130 + Egghead Arc batch). Partial relative to 1120+ total episodes."
+    },
+    {
+      "title": "Attack on Titan Season 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India",
+        "Crunchyroll India"
+      ],
+      "notes": "Season 2 Hindi release."
+    },
+    {
+      "title": "Black Clover (Hindi Partial / Multi-Arc)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Crunchyroll India",
+        "Netflix India"
+      ],
+      "notes": "Official Hindi dub spanning 102+ episodes of the 170-episode run."
+    },
+    {
+      "title": "Akame ga Kill!",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India"
+      ],
+      "notes": "Hindi dub on Anime Times / Netflix regional."
+    },
+    {
+      "title": "Bleach (Original Series — Hindi Partial Dub)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Crunchyroll India",
+        "JioHotstar"
+      ],
+      "notes": "167 of 366 episodes officially dubbed in Hindi."
+    },
+    {
+      "title": "Solo Leveling: Arise (Special Teaser/Announced S3)",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 3 Hindi SimulDub anticipated/announced following S2 finale."
+    },
+    {
+      "title": "DanMachi: Is It Wrong to Try to Pick Up Girls in a Dungeon? Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Anime Times India"
+      ],
+      "notes": "Official Hindi dub on Muse India / Anime Times."
+    },
+    {
+      "title": "Hyouka",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India"
+      ],
+      "notes": "Official Hindi dub via Muse India."
+    },
+    {
+      "title": "Oshi no Ko Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India",
+        "Netflix India"
+      ],
+      "notes": "Official Hindi dub available on Anime Times India / Netflix India."
+    },
+    {
+      "title": "Seraph of the End: Vampire Reign Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Netflix India"
+      ],
+      "notes": "Official Hindi dub."
+    },
+    {
+      "title": "Jujutsu Kaisen: The Culling Game (Season 3)",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India",
+        "Netflix India"
+      ],
+      "notes": "Culling Game Arc Hindi SimulDub on Crunchyroll India & Netflix India."
+    },
+    {
+      "title": "Beastars Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix India Hindi audio track."
+    },
+    {
+      "title": "DanMachi Season 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Anime Times India"
+      ],
+      "notes": "Season 2 Hindi dub."
+    },
+    {
+      "title": "Blood Blockade Battlefront Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi catalog dub."
+    },
+    {
+      "title": "Boruto: Naruto Next Generations (Hindi Partial)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Crunchyroll India",
+        "Sony YAY!"
+      ],
+      "notes": "Initial broadcast batches (~52 episodes) officially dubbed in Hindi."
+    },
+    {
+      "title": "The Fragrant Flower Blooms with Dignity",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix India Hindi SimulDub."
+    },
+    {
+      "title": "Heavenly Delusion",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "JioHotstar"
+      ],
+      "notes": "Official Hindi dub on JioHotstar."
+    },
+    {
+      "title": "DanMachi Season 3",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Anime Times India"
+      ],
+      "notes": "Season 3 Hindi dub."
+    },
+    {
+      "title": "Wind Breaker Season 3",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 3 announced."
+    },
+    {
+      "title": "Grimgar, Ashes and Illusions",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi catalog dub."
+    },
+    {
+      "title": "Oshi no Ko Season 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India"
+      ],
+      "notes": "Season 2 Hindi dub on Anime Times India."
+    },
+    {
+      "title": "Mushoku Tensei Season 3",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Muse India",
+        "Crunchyroll India"
+      ],
+      "notes": "Season 3 announced; Hindi simulcast dub expected."
+    },
+    {
+      "title": "My Hero Academia: Heroes Rising",
+      "type": "Movie",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India",
+        "Netflix India"
+      ],
+      "notes": "Second MHA movie officially dubbed in Hindi."
+    },
+    {
+      "title": "Akudama Drive",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub."
+    },
+    {
+      "title": "In/Spectre Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub."
+    },
+    {
+      "title": "Moriarty the Patriot Part 1 & 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Crunchyroll India"
+      ],
+      "notes": "Official Hindi dub via Muse India."
+    },
+    {
+      "title": "One-Punch Man Season 3",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Crunchyroll India",
+        "Netflix India"
+      ],
+      "notes": "Season 3 Hindi SimulDub rollout."
+    },
+    {
+      "title": "Beastars Season 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix India Hindi audio track."
+    },
+    {
+      "title": "The Misfit of Demon King Academy Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India",
+        "Muse India"
+      ],
+      "notes": "Season 1 Hindi dub release."
+    },
+    {
+      "title": "The Misfit of Demon King Academy II",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India",
+        "Muse India"
+      ],
+      "notes": "Season 2 Hindi dub."
+    },
+    {
+      "title": "DanMachi Season 4 Part 1 & 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Anime Times India"
+      ],
+      "notes": "Season 4 Hindi dub."
+    },
+    {
+      "title": "Orb: On the Movements of the Earth",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix India streaming."
+    },
+    {
+      "title": "Farming Life in Another World",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India"
+      ],
+      "notes": "Official Hindi dub via Muse India."
+    },
+    {
+      "title": "The Apothecary Diaries Season 3",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 3 announced for Crunchyroll India."
+    },
+    {
+      "title": "My Hero Academia: World Heroes’ Mission",
+      "type": "Movie",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Third MHA movie officially dubbed in Hindi."
+    },
+    {
+      "title": "I Parry Everything",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Anime Times India"
+      ],
+      "notes": "Muse India official Hindi dub."
+    },
+    {
+      "title": "The Reincarnated Princess and the Genius Young Lady",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India"
+      ],
+      "notes": "Official Muse India Hindi dub."
+    },
+    {
+      "title": "DanMachi Season 5",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India"
+      ],
+      "notes": "Season 5 Hindi dub on Anime Times."
+    },
+    {
+      "title": "Yu-Gi-Oh! Duel Monsters",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Cartoon Network India"
+      ],
+      "notes": "Classic Duel Monsters arcs broadcast in Hindi on Cartoon Network India."
+    },
+    {
+      "title": "Sweetness & Lightning",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub."
+    },
+    {
+      "title": "Detective Conan / Case Closed (Hindi Partial)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Crunchyroll India",
+        "Hungama TV",
+        "ETV Bal Bharat"
+      ],
+      "notes": "Selected 123 episodes aired/streamed officially in Hindi."
+    },
+    {
+      "title": "One Piece Film: Red",
+      "type": "Movie",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India",
+        "PVR Theatrical India"
+      ],
+      "notes": "Official Hindi theatrical/streaming dub release in India."
+    },
+    {
+      "title": "Black Torch",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Ongoing/recent Hindi SimulDub on Crunchyroll India."
+    },
+    {
+      "title": "Let This Grieving Soul Retire",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub."
+    },
+    {
+      "title": "2.5 Dimensional Seduction",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India",
+        "Muse India"
+      ],
+      "notes": "Hindi dub on Muse India / Anime Times."
+    },
+    {
+      "title": "Loner Life in Another World",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India",
+        "Muse India"
+      ],
+      "notes": "Muse India / Anime Times Hindi dub."
+    },
+    {
+      "title": "Overlord: The Sacred Kingdom",
+      "type": "Movie",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India",
+        "PVR Theatrical India"
+      ],
+      "notes": "Overlord feature film Hindi theatrical/CR release."
+    },
+    {
+      "title": "Overlord Season 5 / Movie Continuation",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Future continuation announced; previous seasons 1–4 available in Hindi."
+    },
+    {
+      "title": "Overgeared",
+      "type": "ONA",
+      "dub_status": "Partial",
+      "platforms": [
+        "Crunchyroll India",
+        "Amazon Prime Video India"
+      ],
+      "notes": "Official Fall 2026 Hindi SimulDub Ongoing (8 of 12 episodes released)."
+    },
+    {
+      "title": "Inazuma Eleven",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Cartoon Network India",
+        "Hungama TV"
+      ],
+      "notes": "Broadcast in Hindi on Cartoon Network / Hungama."
+    },
+    {
+      "title": "SK8 the Infinity",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub."
+    },
+    {
+      "title": "The Cafe Terrace and Its Goddesses Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 1 Hindi dub on Crunchyroll India."
+    },
+    {
+      "title": "In/Spectre Season 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub."
+    },
+    {
+      "title": "The Most Notorious \"Talker\" Runs the World’s Greatest Clan",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India",
+        "Muse India"
+      ],
+      "notes": "Hindi dub release."
+    },
+    {
+      "title": "Bottom-Tier Character Tomozaki 2nd Stage",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 2 Hindi dub on Crunchyroll India."
+    },
+    {
+      "title": "Ishura Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "JioHotstar"
+      ],
+      "notes": "Official Hindi dub on JioHotstar."
+    },
+    {
+      "title": "Blue Box Season 2",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Season 2 announced for Netflix India."
+    },
+    {
+      "title": "Alya Sometimes Hides Her Feelings in Russian Season 2",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 2 announced; Hindi SimulDub expected."
+    },
+    {
+      "title": "Delicious in Dungeon Season 2",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Season 2 in production; Netflix India Hindi dub expected."
+    },
+    {
+      "title": "2.43: Seiin High School Boys Volleyball Team",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub."
+    },
+    {
+      "title": "Beastars Final Season Part 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix India Hindi SimulDub."
+    },
+    {
+      "title": "The Fable",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "JioHotstar"
+      ],
+      "notes": "Official Hindi dub on JioHotstar."
+    },
+    {
+      "title": "Shangri-La Frontier Season 3",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 3 announced; Hindi SimulDub expected."
+    },
+    {
+      "title": "The Seven Deadly Sins: Four Knights of the Apocalypse Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix India Hindi dub."
+    },
+    {
+      "title": "The Vampire Dies in No Time Season 1",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India"
+      ],
+      "notes": "Official Muse India Hindi dub."
+    },
+    {
+      "title": "The Cafe Terrace and Its Goddesses Season 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 2 Hindi dub on Crunchyroll India."
+    },
+    {
+      "title": "Sakamoto Days Season 2",
+      "type": "TV",
+      "dub_status": "Announced",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Announced upcoming Netflix India Hindi dub continuation."
+    },
+    {
+      "title": "Zatch Bell!",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Sonic Nickelodeon",
+        "Cartoon Network India"
+      ],
+      "notes": "Aired in Hindi up to Episode 100+ on Sonic Nickelodeon."
+    },
+    {
+      "title": "Solo Camping for Two",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Crunchyroll India Hindi dub release."
+    },
+    {
+      "title": "Crayon Shin-chan (Hindi TV Series)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV",
+        "Sony YAY!",
+        "JioHotstar"
+      ],
+      "notes": "Premiered June 2006 on Hungama TV; continues with new batches on Sony YAY! & JioHotstar."
+    },
+    {
+      "title": "Seraph of the End: Battle in Nagoya (Season 2)",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Muse India",
+        "Netflix India"
+      ],
+      "notes": "Season 2 official Hindi dub."
+    },
+    {
+      "title": "The Seven Deadly Sins: Four Knights of the Apocalypse Season 2",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix India Hindi dub."
+    },
+    {
+      "title": "Sgt. Frog (Keroro Gunso)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV"
+      ],
+      "notes": "Aired in Hindi on Hungama TV."
+    },
+    {
+      "title": "BAKI-DOU",
+      "type": "ONA",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix ONA Hindi dub."
+    },
+    {
+      "title": "Natsume’s Book of Friends Season 7",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 7 Hindi dub on Crunchyroll India."
+    },
+    {
+      "title": "MF Ghost Season 3",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Crunchyroll India"
+      ],
+      "notes": "Season 3 Hindi SimulDub on Crunchyroll India."
+    },
+    {
+      "title": "Digimon Fusion (Xros Wars)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV",
+        "Disney XD India"
+      ],
+      "notes": "Broadcast on Disney XD / Hungama in Hindi."
+    },
+    {
+      "title": "BASTARD!! -Heavy Metal, Dark Fantasy- Season 1",
+      "type": "ONA",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix ONA with Hindi audio."
+    },
+    {
+      "title": "Mobile Suit Gundam Hathaway: The Sorcery of Nymph Circe",
+      "type": "Movie",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "August 2026 Netflix India film with Hindi audio."
+    },
+    {
+      "title": "BASTARD!! -Heavy Metal, Dark Fantasy- Season 2",
+      "type": "ONA",
+      "dub_status": "Complete",
+      "platforms": [
+        "Netflix India"
+      ],
+      "notes": "Netflix ONA Season 2 with Hindi audio."
+    },
+    {
+      "title": "Sakuna: Of Rice and Ruin",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Anime Times India"
+      ],
+      "notes": "Anime Times India Hindi dub."
+    },
+    {
+      "title": "Doraemon (2005 TV Series)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV",
+        "Disney Channel India",
+        "JioHotstar"
+      ],
+      "notes": "Classic Disney India / Hungama TV Hindi dub spanning hundreds of episodes."
+    },
+    {
+      "title": "Kochira Katsushika-ku Kameari Kouen-mae Hashutsujo (Kochikame)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV",
+        "Disney XD India"
+      ],
+      "notes": "Hungama TV classic Hindi dub."
+    },
+    {
+      "title": "Mirmo Zibang!",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV",
+        "Disney Channel India"
+      ],
+      "notes": "Aired in Hindi on Hungama / Pogo."
+    },
+    {
+      "title": "Beyblade X",
+      "type": "TV",
+      "dub_status": "Complete",
+      "platforms": [
+        "Disney Channel India",
+        "Sony YAY!"
+      ],
+      "notes": "Latest Beyblade X series in Hindi."
+    },
+    {
+      "title": "Ninja Hattori-kun (1981 / 2012)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Nickelodeon India",
+        "Sonic Nickelodeon"
+      ],
+      "notes": "Iconic Nickelodeon India Hindi dub broadcast."
+    },
+    {
+      "title": "The Tibetan Dog",
+      "type": "Movie",
+      "dub_status": "Complete",
+      "platforms": [
+        "Hungama TV",
+        "Disney Channel India"
+      ],
+      "notes": "Madhouse animated film aired in Hindi on Indian television."
+    },
+    {
+      "title": "Ninja Boy Rantaro",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV"
+      ],
+      "notes": "Classic Hungama TV Hindi dub."
+    },
+    {
+      "title": "Chibi Maruko-chan",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Nickelodeon India",
+        "Disney Channel India"
+      ],
+      "notes": "Aired in Hindi on Nickelodeon India."
+    },
+    {
+      "title": "Atashin’chi",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Nickelodeon India",
+        "Hungama TV"
+      ],
+      "notes": "Iconic family slice-of-life Hindi TV dub."
+    },
+    {
+      "title": "Perman (1983)",
+      "type": "TV",
+      "dub_status": "Partial",
+      "platforms": [
+        "Hungama TV",
+        "Nickelodeon India",
+        "JioHotstar"
+      ],
+      "notes": "Iconic Hindi TV dub aired on Hungama / Nickelodeon India."
+    },
+    {
+      "title": "Shin-chan: The Spicy Kasukabe Dancers in India",
+      "type": "Movie",
+      "dub_status": "Complete",
+      "platforms": [
+        "Sony YAY!",
+        "PVR Theatrical India"
+      ],
+      "notes": "India-set Shin-chan theatrical film released in Hindi."
+    }
+  ]
+}

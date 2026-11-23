@@ -1,0 +1,297 @@
+[
+  {
+    "anime_id": "solo_leveling",
+    "title": "Solo Leveling — Season 1",
+    "franchise": "Solo Leveling",
+    "format": "TV Series",
+    "seasons": [
+      {
+        "season_number": 1,
+        "season_title": "Season 1",
+        "season_episodes": 12,
+        "languages": [
+          {
+            "language": "Japanese",
+            "code": "ja",
+            "audio_type": "original",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "12/12",
+            "platform": "Crunchyroll / Netflix",
+            "region": "Global",
+            "source_url": "https://www.crunchyroll.com/series/GKKH2J5NY/solo-leveling",
+            "last_verified": "October 2026",
+            "notes": "Original Japanese audio master."
+          },
+          {
+            "language": "Hindi",
+            "code": "hi",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "12/12",
+            "platform": "Crunchyroll India",
+            "region": "IN",
+            "source_url": "https://www.animedubhindi.link/schedule.php",
+            "last_verified": "October 2026",
+            "notes": "Official Hindi dub starring Rajesh Kava as Sung Jinwoo."
+          },
+          {
+            "language": "English",
+            "code": "en",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "12/12",
+            "platform": "Crunchyroll",
+            "region": "Global",
+            "source_url": "https://english-dubbed.com/anime-industry/english-dub-anime-calendar/",
+            "last_verified": "October 2026",
+            "notes": "SimulDub complete by Bang Zoom! Entertainment."
+          }
+        ]
+      },
+      {
+        "season_number": 2,
+        "season_title": "Season 2: Arise from the Shadow",
+        "season_episodes": 12,
+        "languages": [
+          {
+            "language": "Japanese",
+            "code": "ja",
+            "audio_type": "original",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "Winter 2025 Airing Schedule",
+            "platform": "Tokyo MX / Crunchyroll",
+            "region": "Global",
+            "source_url": "https://www.crunchyroll.com/discover",
+            "last_verified": "October 2026"
+          },
+          {
+            "language": "Hindi",
+            "code": "hi",
+            "audio_type": "dub",
+            "status": "ANNOUNCED",
+            "episodes_dubbed": "SimulDub (2-week offset drop)",
+            "platform": "Crunchyroll India",
+            "region": "IN",
+            "source_url": "https://www.animedubhindi.link/schedule.php",
+            "last_verified": "October 2026"
+          },
+          {
+            "language": "English",
+            "code": "en",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "SimulDub Announced",
+            "platform": "Crunchyroll",
+            "region": "Global",
+            "source_url": "https://english-dubbed.com/anime-industry/english-dub-anime-calendar/",
+            "last_verified": "October 2026"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anime_id": "attack_on_titan",
+    "title": "Attack on Titan — Season 1",
+    "franchise": "Attack on Titan",
+    "format": "TV Series",
+    "seasons": [
+      {
+        "season_number": 1,
+        "season_title": "Season 1",
+        "season_episodes": 25,
+        "languages": [
+          {
+            "language": "Japanese",
+            "code": "ja",
+            "audio_type": "original",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "25/25",
+            "platform": "Crunchyroll / Netflix",
+            "region": "Global",
+            "source_url": "https://www.crunchyroll.com/series/GR751KNZY/attack-on-titan",
+            "last_verified": "October 2026"
+          },
+          {
+            "language": "Hindi",
+            "code": "hi",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "25/25 Complete",
+            "platform": "Anime Times India / Crunchyroll India",
+            "region": "IN",
+            "source_url": "https://www.primevideo.com/",
+            "last_verified": "2026-11-14"
+          },
+          {
+            "language": "English",
+            "code": "en",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "25/25 Complete",
+            "platform": "Crunchyroll / Hulu",
+            "region": "Global",
+            "source_url": "https://english-dubbed.com/anime-industry/english-dub-anime-calendar/",
+            "last_verified": "October 2026"
+          }
+        ]
+      },
+      {
+        "season_number": 2,
+        "season_title": "Season 2",
+        "season_episodes": 12,
+        "languages": [
+          {
+            "language": "Japanese",
+            "code": "ja",
+            "audio_type": "original",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "12/12",
+            "platform": "Crunchyroll / Netflix",
+            "region": "Global",
+            "source_url": "https://www.crunchyroll.com/series/GR751KNZY/attack-on-titan",
+            "last_verified": "October 2026"
+          },
+          {
+            "language": "English",
+            "code": "en",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "12/12",
+            "platform": "Crunchyroll",
+            "region": "Global",
+            "source_url": "https://english-dubbed.com/anime-industry/english-dub-anime-calendar/",
+            "last_verified": "October 2026"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anime_id": "demon_slayer",
+    "title": "Demon Slayer: Kimetsu no Yaiba — Season 1",
+    "franchise": "Demon Slayer",
+    "format": "TV Series",
+    "seasons": [
+      {
+        "season_number": 1,
+        "season_title": "Tanjiro Kamado, Unwavering Resolve Arc",
+        "season_episodes": 26,
+        "languages": [
+          {
+            "language": "Japanese",
+            "code": "ja",
+            "audio_type": "original",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "26/26",
+            "platform": "Crunchyroll / Netflix",
+            "region": "Global",
+            "source_url": "https://www.crunchyroll.com/series/GY5P48XEY/demon-slayer-kimetsu-no-yaiba",
+            "last_verified": "October 2026"
+          },
+          {
+            "language": "Hindi",
+            "code": "hi",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "26/26 Complete",
+            "platform": "Crunchyroll India / Netflix India",
+            "region": "IN",
+            "source_url": "https://www.animedubhindi.link/schedule.php",
+            "last_verified": "October 2026",
+            "notes": "Sanket Mhatre as Tanjiro Kamado."
+          },
+          {
+            "language": "Bengali",
+            "code": "bn",
+            "audio_type": "original",
+            "status": "Sub Only",
+            "episodes_dubbed": "Official Bengali Subtitles Available (No Dub Audio)",
+            "platform": "Muse Asia / Muse India",
+            "region": "BD / IN",
+            "source_url": "https://www.youtube.com/@MuseIndia",
+            "last_verified": "October 2026",
+            "notes": "Subtitles only on YouTube; no Bengali audio dub licensed."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anime_id": "rent_a_girlfriend",
+    "title": "Rent-a-Girlfriend",
+    "franchise": "Rent-a-Girlfriend",
+    "format": "TV Series",
+    "seasons": [
+      {
+        "season_number": 1,
+        "season_title": "Season 1",
+        "season_episodes": 12,
+        "languages": [
+          {
+            "language": "Bengali",
+            "code": "bn",
+            "audio_type": "dub",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "12/12 Complete (Official Bengali Dub)",
+            "platform": "Muse India (YouTube)",
+            "region": "BD / IN",
+            "source_url": "https://www.youtube.com/@MuseIndia",
+            "last_verified": "October 2026",
+            "notes": "100% verified official Bengali voice track licensed by Muse Communication."
+          },
+          {
+            "language": "Japanese",
+            "code": "ja",
+            "audio_type": "original",
+            "status": "CONFIRMED",
+            "episodes_dubbed": "12/12",
+            "platform": "Crunchyroll / Muse Asia",
+            "region": "Global",
+            "source_url": "https://www.crunchyroll.com/discover",
+            "last_verified": "October 2026"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "anime_id": "magical_explorer",
+    "title": "Magical Explorer — Season 1",
+    "franchise": "Magical Explorer",
+    "format": "TV Series",
+    "seasons": [
+      {
+        "season_number": 1,
+        "season_title": "Season 1",
+        "season_episodes": 12,
+        "languages": [
+          {
+            "language": "Japanese",
+            "code": "ja",
+            "audio_type": "original",
+            "status": "ANNOUNCED",
+            "episodes_dubbed": "Terrestrial Broadcast Schedule",
+            "platform": "Tokyo MX / AT-X",
+            "region": "Japan (Domestic Broadcast)",
+            "source_url": "https://sneakerbunko.jp/series/magical-explorer/",
+            "last_verified": "October 2026",
+            "notes": "Domestic Japanese broadcast window tracked separately from OTT streaming window."
+          },
+          {
+            "language": "English",
+            "code": "en",
+            "audio_type": "dub",
+            "status": "ANNOUNCED",
+            "episodes_dubbed": "Worldwide Streaming License",
+            "platform": "Worldwide OTT License",
+            "region": "Global",
+            "source_url": "https://sneakerbunko.jp/series/magical-explorer/",
+            "last_verified": "October 2026",
+            "notes": "Streaming release date kept strictly distinct from Japanese broadcast."
+          }
+        ]
+      }
+    ]
+  }
+]

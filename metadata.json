@@ -1,0 +1,6 @@
+{
+  "name": "AniRead",
+  "description": "Anime details explorer and full-featured manga reader with multi-language translation, offline reading, Dungeon RPG game zone, and community hub.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

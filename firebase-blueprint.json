@@ -1,0 +1,361 @@
+{
+  "entities": {
+    "UserPublicProfile": {
+      "title": "UserPublicProfile",
+      "description": "Public non-PII profile for an authenticated ANIREAD user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "Firebase Authentication user UID."
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Public display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Profile avatar URL."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user"],
+          "description": "Standard user role assigned at registration."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of creation."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["uid", "displayName", "role", "createdAt", "updatedAt"]
+    },
+    "UserPrivateData": {
+      "title": "UserPrivateData",
+      "description": "Isolated PII storage for user email and private account metadata.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 254
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "email", "createdAt", "updatedAt"]
+    },
+    "MyDubListEntry": {
+      "title": "MyDubListEntry",
+      "description": "User's personal dubbed anime tracker entry (My Dub List / mydublis).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "animeId": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "coverImage": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "dubLanguages": {
+          "type": "array",
+          "description": "Verified dubbed audio languages (max 10)."
+        },
+        "verifiedPlatforms": {
+          "type": "array",
+          "description": "Verified streaming platforms (max 10)."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["watching", "completed", "plan_to_watch", "on_hold"]
+        },
+        "episodesWatched": {
+          "type": "integer"
+        },
+        "totalEpisodes": {
+          "type": "integer"
+        },
+        "primaryWatchUrl": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "animeId",
+        "title",
+        "coverImage",
+        "dubLanguages",
+        "verifiedPlatforms",
+        "status",
+        "episodesWatched",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FavoriteEntry": {
+      "title": "FavoriteEntry",
+      "description": "User favorite anime or manga record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mediaId": {
+          "type": "integer"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["anime", "manga"]
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "coverImage": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "score": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "mediaId", "mediaType", "title", "coverImage", "createdAt", "updatedAt"]
+    },
+    "ReadingProgressEntry": {
+      "title": "ReadingProgressEntry",
+      "description": "Manga chapter and page progress synced per user.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "mangaId": {
+          "type": "integer"
+        },
+        "mangaTitle": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "coverImage": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "lastChapterId": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "lastChapterNumber": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "lastPage": {
+          "type": "integer"
+        },
+        "totalPages": {
+          "type": "integer"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "mangaId",
+        "mangaTitle",
+        "lastChapterId",
+        "lastChapterNumber",
+        "lastPage",
+        "totalPages",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "HindiDubOverride": {
+      "title": "HindiDubOverride",
+      "description": "Admin-verified Hindi dubbing override/correction record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "animeId": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "dubStatus": {
+          "type": "string",
+          "enum": ["Complete", "Partial", "Announced"]
+        },
+        "platforms": {
+          "type": "array"
+        },
+        "hindiEpisodeCount": {
+          "type": "integer"
+        },
+        "sourceUrl": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "verifiedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "animeId", "title", "dubStatus", "platforms", "verifiedByUid", "createdAt", "updatedAt"]
+    },
+    "AdminMarker": {
+      "title": "AdminMarker",
+      "description": "Trusted administrator lookup marker.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["uid", "grantedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserPublicProfile"
+      },
+      "description": "Public non-PII user profiles keyed by Firebase Auth UID."
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": {
+        "$ref": "#/entities/UserPrivateData"
+      },
+      "description": "Private PII document ('info') readable/writable only by the owning verified user or admin."
+    },
+    "/users/{userId}/dubList/{entryId}": {
+      "schema": {
+        "$ref": "#/entities/MyDubListEntry"
+      },
+      "description": "Personal My Dub List anime entries with verified platforms and dub languages."
+    },
+    "/users/{userId}/favorites/{favId}": {
+      "schema": {
+        "$ref": "#/entities/FavoriteEntry"
+      },
+      "description": "User saved favorite anime and manga entries."
+    },
+    "/users/{userId}/readingProgress/{mangaId}": {
+      "schema": {
+        "$ref": "#/entities/ReadingProgressEntry"
+      },
+      "description": "User manga chapter reading progress."
+    },
+    "/hindiDubOverrides/{overrideId}": {
+      "schema": {
+        "$ref": "#/entities/HindiDubOverride"
+      },
+      "description": "Verified Hindi dubbing overrides manageable only by verified admins."
+    },
+    "/admins/{uid}": {
+      "schema": {
+        "$ref": "#/entities/AdminMarker"
+      },
+      "description": "Trusted admin role marker documents."
+    }
+  }
+}

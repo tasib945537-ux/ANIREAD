@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0B0F19"/>
+    </linearGradient>
+    <linearGradient id="primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#bg)"/>
+  <rect width="510" height="510" x="1" y="1" rx="127" stroke="#312E81" stroke-width="2" stroke-opacity="0.5"/>
+  
+  <!-- Manga Book Pages -->
+  <path d="M120 360C170 330 220 335 256 355C292 335 342 330 392 360V180C342 150 292 155 256 175C220 155 170 150 120 180V360Z" 
+        fill="url(#primary)" fill-opacity="0.15" stroke="url(#primary)" stroke-width="16" stroke-linejoin="round"/>
+  
+  <line x1="256" y1="175" x2="256" y2="355" stroke="url(#primary)" stroke-width="14" stroke-linecap="round"/>
+  
+  <!-- Speed Lines / Manga Action Accent -->
+  <path d="M150 220H230M150 260H220M150 300H200" stroke="#818CF8" stroke-width="8" stroke-linecap="round" stroke-opacity="0.8"/>
+  <path d="M362 220H282M362 260H292M362 300H312" stroke="#F472B6" stroke-width="8" stroke-linecap="round" stroke-opacity="0.8"/>
+  
+  <!-- Star / Anime Sparkle -->
+  <path d="M256 95L268 128L300 140L268 152L256 185L244 152L212 140L244 128Z" fill="url(#accent)"/>
+</svg>
