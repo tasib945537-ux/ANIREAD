@@ -57,7 +57,6 @@ import { AnimeLoadingState } from './components/AnimeLoadingState';
 import { ServicesDirectoryPage } from './components/directory/ServicesDirectoryPage';
 import { DubDetailsModal } from './components/DubDetailsModal';
 import { DubReleaseCalendarModal } from './components/DubReleaseCalendarModal';
-import { HindiDubAdminModal } from './components/admin/HindiDubAdminModal';
 import { UpcomingAnimeSection } from './components/UpcomingAnimeSection';
 import { GoogleAITranslator } from './components/GoogleAITranslator';
 import { VoiceSearchButton } from './components/VoiceSearchButton';
@@ -170,7 +169,6 @@ export default function App() {
   const [selectedDubBadgeModal, setSelectedDubBadgeModal] = useState<{ anime: AnimeItem; langCode: string } | null>(null);
   const [selectedSubModal, setSelectedSubModal] = useState<{ anime: AnimeItem; langCode?: string } | null>(null);
   const [showDubCalendarModal, setShowDubCalendarModal] = useState(false);
-  const [showHindiAdminModal, setShowHindiAdminModal] = useState(false);
   const [hindiRegistryVersion, setHindiRegistryVersion] = useState(0);
   const [isTranslatorOpen, setIsTranslatorOpen] = useState(false);
 
@@ -223,7 +221,7 @@ export default function App() {
 
   // Register Service Worker for PWA & offline caching, and fetch trending spotlight & reading progress
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && window.location.hostname !== 'localhost') {
       navigator.serviceWorker
         .register('/sw.js')
         .then((reg) => {
@@ -1083,14 +1081,6 @@ export default function App() {
 
                     <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
                       <button
-                        type="button"
-                        onClick={() => setShowHindiAdminModal(true)}
-                        className="px-3 py-1.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-200 font-bold text-xs flex items-center gap-1.5 border border-amber-500/40 transition-all cursor-pointer"
-                      >
-                        <Database className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Hindi DB Admin</span>
-                      </button>
-                      <button
                         onClick={() => setShowDubCalendarModal(true)}
                         className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md border border-indigo-400/30 transition-all cursor-pointer"
                       >
@@ -1458,13 +1448,6 @@ export default function App() {
           setSearchQuery(title);
           setShowDubCalendarModal(false);
         }}
-      />
-
-      {/* Hindi Dub Database Admin Dashboard */}
-      <HindiDubAdminModal
-        isOpen={showHindiAdminModal}
-        onClose={() => setShowHindiAdminModal(false)}
-        onDatabaseUpdated={() => setHindiRegistryVersion((v) => v + 1)}
       />
 
       {/* Interactive Google AI Translator Modal */}
