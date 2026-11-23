@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Downloaded at backend deployment time
+data/raw/anime-offline-database-minified.json
