@@ -24,6 +24,8 @@ import {
   SortFilterType,
 } from './animeExplorerService';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\\/$/, '');
+
 // In-memory request cache
 const apiCache = new Map<string, { timestamp: number; data: any }>();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -2339,7 +2341,7 @@ export async function getChapterPages(chapterId: string): Promise<string[]> {
       if (files.length > 0) {
         return files.map((filename: string) => {
           const directUrl = `${baseUrl}/data/${hash}/${filename}`;
-          return `/api/manga-page?url=${encodeURIComponent(directUrl)}`;
+          return `${API_BASE_URL}/api/manga-page?url=${encodeURIComponent(directUrl)}`;
         });
       }
     }
@@ -3207,7 +3209,7 @@ export async function getUpcomingAniListAnime(params: {
           title,
           englishTitle: m.title?.english,
           nativeTitle: m.title?.native,
-          coverImage: m.coverImage?.extraLarge || m.coverImage?.large || `/api/anime-cover?title=${encodeURIComponent(title)}&malId=${m.idMal || ''}`,
+          coverImage: m.coverImage?.extraLarge || m.coverImage?.large || `${API_BASE_URL}/api/anime-cover?title=${encodeURIComponent(title)}&malId=${m.idMal || ''}`,
           bannerImage: m.bannerImage || m.coverImage?.extraLarge || m.coverImage?.large,
           format: m.format || 'TV',
           status: 'Not yet aired',
