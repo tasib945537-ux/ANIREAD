@@ -24,7 +24,8 @@ import {
   SortFilterType,
 } from './animeExplorerService';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\\/$/, '');
+const rawApiBase = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
 
 // In-memory request cache
 const apiCache = new Map<string, { timestamp: number; data: any }>();
