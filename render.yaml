@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: aniread-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build && mkdir -p data/raw && curl -fL --retry 3 --retry-delay 2 https://github.com/ipkpjersi/anime-offline-database/releases/latest/download/anime-offline-database-minified.json -o data/raw/anime-offline-database-minified.json
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
