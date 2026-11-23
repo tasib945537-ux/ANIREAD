@@ -32,11 +32,9 @@ service cloud.firestore {
       return isVerifiedUser() && request.auth.uid == userId;
     }
 
+    // Admin dashboard is removed; no client account receives admin overrides.
     function isAdmin() {
-      return isVerifiedUser() && (
-        request.auth.token.email == 'gamerbangla436@gmail.com' ||
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-      );
+      return false;
     }
 
     function hasValidParentUser(userId) {
