@@ -4,7 +4,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { FirebaseProvider } from './contexts/FirebaseContext';
 import './index.css';
 
-const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\\/$/, '');
+const rawApiBase = import.meta.env.VITE_API_BASE_URL || '';
+const apiBase = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
 const nativeFetch = window.fetch.bind(window);
 window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
   const originalUrl = input instanceof Request ? input.url : String(input);
