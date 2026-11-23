@@ -20,7 +20,7 @@ export const communityRouter = Router();
 
 // Password hashing
 function hashPassword(password: string, salt: string): string {
-  return crypto.pbkdf2Sync(password, salt, 1000, 32, 'sha256').toString('hex');
+  return crypto.pbkdf2Sync(password, salt, 120000, 32, 'sha256').toString('hex');
 }
 
 // In-Memory Database with Seed Data
@@ -37,7 +37,7 @@ const seedUsers: CommunityUser[] = [
     username: 'admin',
     displayName: 'Sung Jin-Woo',
     avatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80',
-    role: 'admin',
+    role: 'member',
     hunterRank: 'Shadow Monarch',
     status: 'online',
     customStatus: 'Arise.',
@@ -48,7 +48,7 @@ const seedUsers: CommunityUser[] = [
     username: 'cha_haein',
     displayName: 'Cha Hae-In',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-    role: 'moderator',
+    role: 'member',
     hunterRank: 'S-Rank Hunter',
     status: 'online',
     customStatus: 'The Sword of Light',
@@ -59,7 +59,7 @@ const seedUsers: CommunityUser[] = [
     username: 'go_gunhee',
     displayName: 'Chairman Go',
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-    role: 'hunter',
+    role: 'member',
     hunterRank: 'S-Rank Hunter',
     status: 'idle',
     customStatus: 'Hunter Association HQ',
@@ -79,11 +79,8 @@ const seedUsers: CommunityUser[] = [
 ];
 
 seedUsers.forEach((u) => {
-  const salt = crypto.randomBytes(16).toString('hex');
-  u.salt = salt;
-  u.passwordHash = hashPassword('aniread123', salt);
+  // Demo profiles are display-only; no shared passwords or predictable sessions.
   users.set(u.id, u);
-  tokens.set(`token_${u.id}`, u.id);
 });
 
 // Seed Community Servers & Channels
@@ -277,11 +274,12 @@ communityRouter.post('/channels/:channelId/messages', (req: Request, res: Respon
   }
 
   const authUser = getAuthUser(req);
-  const authorName = authUser ? authUser.displayName : req.body.guestName || 'Guest Hunter';
-  const authorAvatar = authUser ? authUser.avatar : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
-  const authorRole = authUser ? authUser.role : 'member';
-  const authorRank = authUser ? authUser.hunterRank : 'E-Rank Cadet';
-  const authorId = authUser ? authUser.id : `guest_${Date.now()}`;
+  if (!authUser) return res.status(401).json({ error: 'Sign in to send community messages.' });
+  const authorName = authUser.displayName;
+  const authorAvatar = authUser.avatar;
+  const authorRole = 'member';
+  const authorRank = authUser.hunterRank;
+  const authorId = authUser.id;
 
   const newMessage: CommunityMessage = {
     id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
@@ -314,7 +312,7 @@ communityRouter.delete('/messages/:messageId', (req: Request, res: Response) => 
     if (idx >= 0) {
       const msg = msgList[idx];
       // Check author or admin/mod
-      if (authUser && (authUser.id === msg.authorId || authUser.role === 'admin' || authUser.role === 'moderator')) {
+      if (authUser && authUser.id === msg.authorId) {
         msgList.splice(idx, 1);
         return res.json({ success: true, messageId });
       } else {
@@ -333,7 +331,8 @@ communityRouter.post('/messages/:messageId/reactions', (req: Request, res: Respo
   if (!emoji) return res.status(400).json({ error: 'Emoji is required' });
 
   const authUser = getAuthUser(req);
-  const userId = authUser ? authUser.id : req.body.guestId || 'guest_user';
+  if (!authUser) return res.status(401).json({ error: 'Sign in to react to community messages.' });
+  const userId = authUser.id;
 
   for (const [, msgList] of messages.entries()) {
     const target = msgList.find((m) => m.id === messageId);
@@ -387,8 +386,12 @@ communityRouter.post('/auth/register', (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
+  if (password.length < 10 || password.length > 128) {
+    return res.status(400).json({ error: 'Password must be between 10 and 128 characters.' });
+  }
+
   const cleanUser = username.trim().toLowerCase();
-  if (cleanUser.length < 3) {
+  if (cleanUser.length < 3 || cleanUser.length > 32 || !/^[a-z0-9_]+$/.test(cleanUser)) {
     return res.status(400).json({ error: 'Username must be at least 3 characters' });
   }
 
@@ -402,7 +405,7 @@ communityRouter.post('/auth/register', (req: Request, res: Response) => {
   const salt = crypto.randomBytes(16).toString('hex');
   const passwordHash = hashPassword(password, salt);
   const userId = `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-  const token = `tok_${crypto.randomBytes(24).toString('hex')}`;
+  const token = crypto.randomBytes(32).toString('hex');
 
   const defaultAvatar =
     avatar ||
@@ -456,12 +459,13 @@ communityRouter.post('/auth/login', (req: Request, res: Response) => {
     }
   }
 
-  if (!foundUser || !foundUser.salt || !foundUser.passwordHash) {
+  if (typeof username !== 'string' || typeof password !== 'string' || !foundUser || !foundUser.salt || !foundUser.passwordHash) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
   const testHash = hashPassword(password, foundUser.salt);
-  if (testHash !== foundUser.passwordHash) {
+  const matches = crypto.timingSafeEqual(Buffer.from(testHash, 'hex'), Buffer.from(foundUser.passwordHash, 'hex'));
+  if (!matches) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
 
