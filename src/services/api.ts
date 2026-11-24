@@ -1646,6 +1646,7 @@ export async function searchManga(
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ query: gqlQuery, variables }),
+      signal: AbortSignal.timeout(12000),
     });
 
     if (res.ok) {
@@ -1690,7 +1691,7 @@ export async function searchManga(
     console.warn('AniList Manga fetch failed, falling back to MangaDex/Jikan:', err);
   }
 
-  // Fallback to MangaDex with all content ratings so Berserk and mature manga are never hidden
+  // Fallback to MangaDex using general-audience and suggestive catalog entries
   try {
     const offset = (page - 1) * 20;
     let url = `/api/mangadex/manga?limit=20&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive`;
@@ -2282,16 +2283,15 @@ export async function getChapterPages(chapterId: string): Promise<string[]> {
     }
 
     if (data?.baseUrl && data?.chapter?.hash) {
-      const files: string[] =
-        Array.isArray(data.chapter.data) && data.chapter.data.length > 0
-          ? data.chapter.data
-          : Array.isArray(data.chapter.dataSaver)
-            ? data.chapter.dataSaver
-            : [];
+      const useDataSaver = !(Array.isArray(data.chapter.data) && data.chapter.data.length > 0);
+      const files: string[] = useDataSaver
+        ? (Array.isArray(data.chapter.dataSaver) ? data.chapter.dataSaver : [])
+        : data.chapter.data;
 
       if (files.length > 0) {
         return files.map((filename: string) => {
-          const directUrl = `${data.baseUrl}/data/${data.chapter.hash}/${filename}`;
+          const qualityPath = useDataSaver ? 'data-saver' : 'data';
+          const directUrl = `${data.baseUrl}/${qualityPath}/${data.chapter.hash}/${filename}`;
           return `${API_BASE_URL}/api/manga-page?url=${encodeURIComponent(directUrl)}`;
         });
       }
