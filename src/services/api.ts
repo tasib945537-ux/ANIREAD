@@ -1920,8 +1920,14 @@ export async function getMangaChaptersWithInfo(
       })
     );
 
+    const allScanChapterKeys = new Set(
+      validScans.map((chapter: any) => {
+        const attrs = chapter.attributes || {};
+        return `${String(attrs.volume ?? '')}:${String(attrs.chapter ?? 'Oneshot')}:${String(attrs.translatedLanguage || '').toLowerCase()}`;
+      })
+    );
     const availableLanguages: { code: string; name: string; count: number }[] = [
-      { code: 'all', name: 'All Translations', count: chapterMap.size },
+      { code: 'all', name: 'All Translations', count: allScanChapterKeys.size },
       ...Object.entries(langCounts)
         .map(([code, count]) => ({
           code,
