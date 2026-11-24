@@ -565,11 +565,11 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     banglaEpisodeRange = `Episodes 1–${effectiveTotalEpisodes} (Complete)`;
     banglaNotes = 'Officially verified Bangla (Bengali) audio dub broadcast by Muse India.';
   } else if (hasBengaliSubtitles) {
-    banglaStatus = 'Unavailable';
+    banglaStatus = 'Unknown';
     banglaDubType = 'Unknown';
     banglaDubbedCount = 0;
-    banglaProvider = 'Muse Asia / Muse India (Subtitles Only)';
-    banglaEpisodeRange = '0 (Subtitles Only)';
+    banglaProvider = 'Bengali subtitles listed; audio status unknown';
+    banglaEpisodeRange = 'Bangla audio not confirmed';
     banglaNotes = 'Bengali subtitles are listed, but subtitles alone do not confirm whether a Bangla audio dub exists.';
   }
 
@@ -613,7 +613,7 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
   const episodeMatrix: EpisodeAudioMatrixRow[] = [];
 
   for (let ep = 1; ep <= matrixLength; ep++) {
-    const isJapanese = true; // 100% of authentic anime have Japanese original
+    const isJapanese = originalAudio?.code === 'ja';
 
     let isHindi: boolean | null = null;
     if (hindiStatus === 'Verified') {
@@ -662,7 +662,7 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
       hindiDubbedCount,
       englishDubbedCount,
       banglaDubbedCount,
-      japaneseCount: effectiveTotalEpisodes,
+      japaneseCount: originalAudio?.code === 'ja' ? effectiveTotalEpisodes : 0,
       totalEpisodes: effectiveTotalEpisodes,
     },
   };
