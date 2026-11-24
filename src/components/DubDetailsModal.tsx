@@ -20,8 +20,9 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { AnimeItem, DubVerificationStatus, DubDetail } from '../types/anime';
+import { AnimeItem, AnimeAudioRelease, DubVerificationStatus, DubDetail } from '../types/anime';
 import { getAnimeDubInfo } from '../services/dubCatalog';
+import { fetchVerifiedDubDetails } from '../services/api';
 import { getAnimeAudioAvailability, buildVerifiedPlatformUrl } from '../services/dubVerificationStorage';
 import { VERIFIED_24_ANIME_WEBSITES } from './anime-detail/AnimeWebSourceChecker';
 import {
@@ -49,6 +50,7 @@ export const DubDetailsModal: React.FC<Props> = ({
   const [inMyDubList, setInMyDubList] = useState<boolean>(false);
   const [showAll24Sources, setShowAll24Sources] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
+  const [backendReleases, setBackendReleases] = useState<AnimeAudioRelease[]>([]);
 
   useEffect(() => {
     if (initialLanguageCode) {
@@ -61,6 +63,22 @@ export const DubDetailsModal: React.FC<Props> = ({
       isInMyDubList(anime.id).then(setInMyDubList);
     }
   }, [anime]);
+
+  useEffect(() => {
+    let active = true;
+    setBackendReleases([]);
+    if (!anime) return () => { active = false; };
+
+    fetchVerifiedDubDetails(anime.anilistId || anime.id || anime.title)
+      .then((result) => {
+        if (active && Array.isArray(result?.verifiedReleases)) {
+          setBackendReleases(result.verifiedReleases);
+        }
+      })
+      .catch((error) => console.warn('Verified dub registry lookup failed:', error));
+
+    return () => { active = false; };
+  }, [anime?.anilistId, anime?.id, anime?.title]);
 
   const mergedDubs = useMemo<DubDetail[]>(() => {
     if (!anime) return [];
@@ -136,8 +154,41 @@ export const DubDetailsModal: React.FC<Props> = ({
       }
     }
 
+    // Merge backend-verified releases without inventing platforms or episode coverage.
+    for (const release of backendReleases) {
+      const releaseDetail: DubDetail = {
+        language: release.languageName,
+        code: release.languageCode,
+        flag: release.flag || '',
+        name: release.audioType === 'original' ? `${release.languageName} (Original)` : `${release.languageName} Dub`,
+        status: release.status,
+        castCount: release.voiceActors?.length || 0,
+        platforms: release.platformName ? [release.platformName] : [],
+        verificationSource: 'ANIREAD release registry',
+        isVerified: release.status === 'CONFIRMED' || release.status === 'Available',
+        releaseDate: release.releaseDate,
+        episodesDubbed: release.episodeRange || (release.episodesDubbedCount ? `${release.episodesDubbedCount} episodes` : undefined),
+        episodeRange: release.episodeRange,
+        watchUrl: release.officialUrl,
+        notes: release.notes,
+        regionCode: release.regionCode,
+        evidenceList: release.evidence || [],
+        verifiedAt: release.verifiedAt,
+      };
+      const existingIndex = baseDubs.findIndex((item) => item.code.toLowerCase() === release.languageCode.toLowerCase());
+      if (existingIndex >= 0) {
+        const existing = baseDubs[existingIndex];
+        const backendIsConfirmed = release.status === 'CONFIRMED' || release.status === 'PARTIALLY_CONFIRMED' || release.status === 'Available';
+        baseDubs[existingIndex] = backendIsConfirmed
+          ? { ...existing, ...releaseDetail, platforms: releaseDetail.platforms?.length ? releaseDetail.platforms : existing.platforms }
+          : { ...existing, evidenceList: release.evidence || existing.evidenceList };
+      } else {
+        baseDubs.push(releaseDetail);
+      }
+    }
+
     return baseDubs;
-  }, [anime]);
+  }, [anime, backendReleases]);
 
   const availabilitySummary = useMemo(
     () => (anime ? getAnimeAudioAvailability(anime) : null),
