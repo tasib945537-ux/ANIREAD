@@ -1693,7 +1693,7 @@ export async function searchManga(
   // Fallback to MangaDex with all content ratings so Berserk and mature manga are never hidden
   try {
     const offset = (page - 1) * 20;
-    let url = `/api/mangadex/manga?limit=20&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic`;
+    let url = `/api/mangadex/manga?limit=20&offset=${offset}&includes[]=cover_art&includes[]=author&contentRating[]=safe&contentRating[]=suggestive`;
     if (query) url += `&title=${encodeURIComponent(query)}`;
     else url += '&order[followedCount]=desc';
 
