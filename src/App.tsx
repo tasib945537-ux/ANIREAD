@@ -46,6 +46,7 @@ import { Header, NavTab } from './components/Header';
 import { AnimeCard } from './components/AnimeCard';
 import { AnimeDetailModal } from './components/AnimeDetailModal';
 import { MangaDetailModal } from './components/MangaDetailModal';
+import { MangaReadPage } from './components/MangaReadPage';
 import { MangaReader, ReadingSessionStats } from './components/MangaReader';
 import { CharacterModal } from './components/CharacterModal';
 import { LibraryView } from './components/LibraryView';
@@ -121,6 +122,9 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
+      if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
+        return 'read';
+      }
       if (path === '/directory' || hash === '#directory' || hash.startsWith('#directory/')) {
         return 'directory';
       }
@@ -137,7 +141,9 @@ export default function App() {
     const handleUrlChange = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (path === '/directory' || hash === '#directory' || hash.startsWith('#directory/')) {
+      if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
+        setActiveTab('read');
+      } else if (path === '/directory' || hash === '#directory' || hash.startsWith('#directory/')) {
         setActiveTab('directory');
       } else if (path.startsWith('/upcoming') || hash.startsWith('#upcoming')) {
         setActiveTab('upcoming');
@@ -258,7 +264,9 @@ export default function App() {
     const checkRoute = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (path.startsWith('/manga') || hash.startsWith('#manga')) {
+      if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
+        setActiveTab('read');
+      } else if (path.startsWith('/manga') || hash.startsWith('#manga')) {
         setActiveTab('manga');
       } else if (path.startsWith('/library') || hash.startsWith('#library')) {
         setActiveTab('library');
@@ -309,7 +317,7 @@ export default function App() {
             setTotalAnimePages(res.totalPages);
             setLoading(false);
           }
-        } else if (activeTab === 'manga') {
+        } else if (activeTab === 'manga' || activeTab === 'read') {
           const res = await searchManga(
             searchQuery,
             currentPage,
@@ -532,6 +540,18 @@ export default function App() {
           } else if (tab === 'upcoming') {
             try {
               window.history.pushState(null, '', '#upcoming');
+            } catch {
+              // ignore
+            }
+          } else if (tab === 'read') {
+            try {
+              window.history.pushState(null, '', '#read');
+            } catch {
+              // ignore
+            }
+          } else if (tab === 'manga') {
+            try {
+              window.history.pushState(null, '', '#manga');
             } catch {
               // ignore
             }
@@ -1197,6 +1217,30 @@ export default function App() {
               />
             )}
           </div>
+        )}
+
+        {activeTab === 'read' && (
+          <MangaReadPage
+            mangaItems={mangaList}
+            recentReading={recentReading}
+            loading={loading}
+            searchQuery={searchQuery}
+            onSearchChange={(value) => {
+              setSearchQuery(value);
+              setCurrentPage(1);
+            }}
+            onOpenManga={(manga) => setSelectedManga(manga)}
+            onResume={handleContinueReading}
+            onExploreManga={() => {
+              setActiveTab('manga');
+              setCurrentPage(1);
+              try {
+                window.history.pushState(null, '', '#manga');
+              } catch {
+                // ignore
+              }
+            }}
+          />
         )}
 
         {/* TAB 3: TOP CHARACTERS & 20+ PHOTOS GALLERIES */}
