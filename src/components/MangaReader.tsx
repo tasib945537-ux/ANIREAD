@@ -219,7 +219,7 @@ export const MangaReader: React.FC<Props> = ({
             setLoading(false);
 
             // Load saved translations for this offline chapter
-            getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), targetLang).then((saved) => {
+            getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), targetLang, chapter.id).then((saved) => {
               if (isMounted && saved && Object.keys(saved).length > 0) {
                 setTranslatedPages((prev) => ({ ...prev, ...saved }));
               }
@@ -245,7 +245,7 @@ export const MangaReader: React.FC<Props> = ({
           setLoading(false);
 
           // Smart Auto-Load: Load existing translations permanently stored in IndexedDB
-          getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), targetLang).then((saved) => {
+          getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), targetLang, chapter.id).then((saved) => {
             if (isMounted && saved && Object.keys(saved).length > 0) {
               setTranslatedPages((prev) => ({ ...prev, ...saved }));
             }
@@ -288,7 +288,7 @@ export const MangaReader: React.FC<Props> = ({
         setChapterProgress({ current: job.completedPages, total: job.totalPages });
 
         // Merge any newly translated pages from queue
-        getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), targetLang).then((saved) => {
+        getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), targetLang, chapter.id).then((saved) => {
           if (saved && Object.keys(saved).length > 0) {
             setTranslatedPages((prev) => ({ ...prev, ...saved }));
           }
@@ -554,8 +554,11 @@ export const MangaReader: React.FC<Props> = ({
         imageDataBase64: effectiveBase64,
         pageNumber: pageNum,
         chapterNumber: chapter.chapterNumber,
+        mangaId: chapter.mangaId,
+        chapterId: chapter.id,
         mangaTitle: mangaTitle || chapter.mangaTitle,
         targetLanguage: targetLang,
+        sourceLanguage: chapter.language || 'Auto',
         force: true,
       });
 
@@ -567,7 +570,7 @@ export const MangaReader: React.FC<Props> = ({
       } else {
         // Permanent Auto Save into IndexedDB & localStorage cache immediately
         await saveTranslatedPage({
-          id: `${chapter.mangaId}_ch${chapter.chapterNumber}_p${pageNum}_${targetLang}`,
+          id: `${chapter.mangaId}_ch${chapter.chapterNumber}_${chapter.id}_p${pageNum}_${targetLang}`,
           mangaId: chapter.mangaId,
           chapterId: chapter.id,
           chapterNumber: String(chapter.chapterNumber),
