@@ -1776,7 +1776,7 @@ export async function searchManga(
     qs.set('order', sort === 'score' ? 'ranked' : 'popularity');
     const shikimori = await cachedFetch(`/api/shikimori/mangas?${qs.toString()}`, undefined, 9000);
     if (Array.isArray(shikimori) && shikimori.length) {
-      const items = shikimori.map(normalizeShikimoriManga).filter((item: MangaItem) => item.id > 0 && item.title);
+      const items = shikimori.map(normalizeShikimoriManga).filter((item: MangaItem) => Number(item.id) > 0 && item.title);
       return { items, hasNextPage: items.length >= 20 };
     }
   } catch (shikimoriErr) {
