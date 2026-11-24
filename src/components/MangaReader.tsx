@@ -579,6 +579,7 @@ export const MangaReader: React.FC<Props> = ({
           pageNumber: pageNum,
           originalImageUrl: imgUrl || '',
           targetLanguage: targetLang,
+          sourceLanguage: chapter.language || 'Auto',
           status: 'completed',
           timestamp: Date.now(),
           result: res,
