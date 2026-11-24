@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Volume2,
   CheckCircle2,
@@ -29,9 +29,10 @@ import {
   Smartphone,
   Clock,
 } from 'lucide-react';
-import { AnimeItem, DubDetail, DubVerificationStatus } from '../../types/anime';
+import { AnimeItem, AnimeAudioRelease, DubDetail, DubVerificationStatus } from '../../types/anime';
 import { getAnimeDubInfo, DubSynthesisResult, OFFICIAL_STREAMING_SERVERS } from '../../services/dubCatalog';
 import { getAnimeAudioAvailability } from '../../services/dubVerificationStorage';
+import { fetchVerifiedDubDetails } from '../../services/api';
 import { AnimeEpisodeDubTimers } from './AnimeEpisodeDubTimers';
 import { VERIFIED_24_ANIME_WEBSITES } from './AnimeWebSourceChecker';
 
@@ -71,6 +72,18 @@ export const AnimeDubFinder: React.FC<Props> = ({ anime }) => {
   const [checkerQuery, setCheckerQuery] = useState<string>('');
   const [activeCheckedTitle, setActiveCheckedTitle] = useState<string>(anime.title);
   const [expandedEvidenceCodes, setExpandedEvidenceCodes] = useState<Record<string, boolean>>({});
+  const [backendReleases, setBackendReleases] = useState<AnimeAudioRelease[]>([]);
+  const [isCheckingRegistry, setIsCheckingRegistry] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetchVerifiedDubDetails(anime.anilistId || anime.id || anime.title)
+      .then((result) => {
+        if (active && Array.isArray(result?.verifiedReleases)) setBackendReleases(result.verifiedReleases);
+      })
+      .catch((error) => console.warn('Dub registry lookup failed:', error));
+    return () => { active = false; };
+  }, [anime.anilistId, anime.id, anime.title]);
 
   // Compute dub info for current anime or tested title
   const isTestingCustom = activeCheckedTitle.trim().toLowerCase() !== anime.title.trim().toLowerCase();
@@ -98,9 +111,49 @@ export const AnimeDubFinder: React.FC<Props> = ({ anime }) => {
     }),
   };
 
-  const activeDubInfo: DubSynthesisResult = isTestingCustom
+  const activeBaseDubInfo: DubSynthesisResult = isTestingCustom
     ? getAnimeDubInfo(activeCheckedTitle)
     : currentAnimeDubInfo;
+
+  const activeDubTracks = [...activeBaseDubInfo.dubs];
+  for (const release of backendReleases) {
+    const backendTrack: DubDetail = {
+      language: release.languageName,
+      code: release.languageCode,
+      flag: release.flag || '',
+      name: release.audioType === 'original' ? `${release.languageName} (Original)` : `${release.languageName} Dub`,
+      status: release.status,
+      castCount: release.voiceActors?.length || 0,
+      platforms: release.platformName ? [release.platformName] : [],
+      verificationSource: 'ANIREAD release registry',
+      isVerified: release.status === 'CONFIRMED' || release.status === 'Available',
+      releaseDate: release.releaseDate,
+      episodesDubbed: release.episodeRange || (release.episodesDubbedCount ? `${release.episodesDubbedCount} episodes` : undefined),
+      episodeRange: release.episodeRange,
+      watchUrl: release.officialUrl,
+      notes: release.notes,
+      regionCode: release.regionCode,
+      evidenceList: release.evidence || [],
+      verifiedAt: release.verifiedAt,
+    };
+    const index = activeDubTracks.findIndex((item) => item.code.toLowerCase() === release.languageCode.toLowerCase());
+    if (index >= 0) {
+      if (release.status === 'CONFIRMED' || release.status === 'PARTIALLY_CONFIRMED' || release.status === 'Available') {
+        activeDubTracks[index] = {
+          ...activeDubTracks[index],
+          ...backendTrack,
+          platforms: backendTrack.platforms?.length ? backendTrack.platforms : activeDubTracks[index].platforms,
+        };
+      }
+    } else {
+      activeDubTracks.push(backendTrack);
+    }
+  }
+
+  const activeDubInfo: DubSynthesisResult = {
+    ...activeBaseDubInfo,
+    dubs: activeDubTracks,
+  };
 
   const filterTabs = [
     'All',
@@ -184,13 +237,23 @@ export const AnimeDubFinder: React.FC<Props> = ({ anime }) => {
     }));
   };
 
-  const handleRunDubCheck = (titleToCheck: string) => {
+  const handleRunDubCheck = async (titleToCheck: string) => {
     const trimmed = titleToCheck.trim();
     if (!trimmed) return;
     setActiveCheckedTitle(trimmed);
     setSelectedLanguage('All');
     setSelectedStatus('All');
     setSelectedPlatform('All');
+    setIsCheckingRegistry(true);
+    try {
+      const result = await fetchVerifiedDubDetails(trimmed);
+      setBackendReleases(Array.isArray(result?.verifiedReleases) ? result.verifiedReleases : []);
+    } catch (error) {
+      console.warn('Live dub registry check failed:', error);
+      setBackendReleases([]);
+    } finally {
+      setIsCheckingRegistry(false);
+    }
   };
 
   const handleResetToCurrentAnime = () => {
@@ -199,6 +262,11 @@ export const AnimeDubFinder: React.FC<Props> = ({ anime }) => {
     setSelectedLanguage('All');
     setSelectedStatus('All');
     setSelectedPlatform('All');
+    setIsCheckingRegistry(true);
+    fetchVerifiedDubDetails(anime.anilistId || anime.id || anime.title)
+      .then((result) => setBackendReleases(Array.isArray(result?.verifiedReleases) ? result.verifiedReleases : []))
+      .catch(() => setBackendReleases([]))
+      .finally(() => setIsCheckingRegistry(false));
   };
 
   const getPlatformSearchUrl = (
@@ -323,7 +391,7 @@ export const AnimeDubFinder: React.FC<Props> = ({ anime }) => {
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-950/50 transition-all cursor-pointer shrink-0"
             >
               <ShieldCheck className="w-4 h-4" />
-              <span>Check Dub Now</span>
+              <span>{isCheckingRegistry ? 'Checking Registry...' : 'Check Dub Now'}</span>
             </button>
           </form>
 
