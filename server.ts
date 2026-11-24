@@ -792,6 +792,34 @@ For each detected text region, output:
   }
 });
 
+
+// Shikimori public read-only proxy. The provider asks API clients to identify
+// themselves with a User-Agent; keep this header on the server rather than mobile clients.
+app.get('/api/shikimori/:resource', async (req: Request, res: Response) => {
+  const resource = String(req.params.resource || '');
+  if (!['animes', 'mangas'].includes(resource)) {
+    return res.status(404).json({ error: 'Unsupported Shikimori resource' });
+  }
+  try {
+    const target = new URL(`https://shikimori.one/api/${resource}`);
+    for (const [key, value] of Object.entries(req.query)) {
+      if (typeof value === 'string') target.searchParams.set(key, value);
+    }
+    const upstream = await fetch(target.toString(), {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'ANIREAD/1.0 (https://github.com/tasib945537-ux/ANIREAD)',
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+    const body = await upstream.text();
+    res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=900');
+    return res.status(upstream.status).type('application/json').send(body);
+  } catch (error: any) {
+    return res.status(502).json({ error: 'Shikimori proxy failed', message: error?.message });
+  }
+});
+
 // Proxy for MangaDex API to avoid any client CORS blocks
 app.get('/api/mangadex/*', async (req: Request, res: Response) => {
   try {
