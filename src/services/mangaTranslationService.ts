@@ -164,7 +164,8 @@ export async function getTranslatedPage(
 export async function getChapterTranslations(
   mangaId: string | number,
   chapterNumber: string,
-  targetLang: string
+  targetLang: string,
+  chapterId?: string
 ): Promise<Record<number, TranslatedMangaPageResult>> {
   const map: Record<number, TranslatedMangaPageResult> = {};
   try {
@@ -183,6 +184,7 @@ export async function getChapterTranslations(
       if (
         p.id.startsWith(prefix) &&
         p.id.endsWith(suffix) &&
+        (!chapterId || !p.chapterId || p.chapterId === chapterId) &&
         p.status === 'completed' &&
         p.result &&
         p.result.provider !== 'untranslated' &&
@@ -216,7 +218,7 @@ export async function getAllMangaTranslationSummaries(): Promise<MangaTranslatio
     // Group by chapter key
     const groups = new Map<string, StoredTranslatedPage[]>();
     for (const p of allPages) {
-      const key = `${p.mangaId}_ch${p.chapterNumber}_${p.targetLanguage}`;
+      const key = `${p.mangaId}_ch${p.chapterNumber}_${p.chapterId || 'legacy'}_${p.targetLanguage}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(p);
     }
@@ -363,10 +365,10 @@ class TranslationQueueManager {
     const totalPages = pageUrls.length;
     if (totalPages === 0) return;
 
-    const jobId = `${mangaId}_ch${chapterNumber}_${targetLanguage}`;
+    const jobId = `${mangaId}_ch${chapterNumber}_${chapterId || 'legacy'}_${targetLanguage}`;
 
     // Smart check: scan already completed pages in IndexedDB
-    const existingTranslations = forceRetranslate ? {} : await getChapterTranslations(mangaId, chapterNumber, targetLanguage);
+    const existingTranslations = forceRetranslate ? {} : await getChapterTranslations(mangaId, chapterNumber, targetLanguage, chapterId);
     const existingCompleted = Object.keys(existingTranslations).map(Number);
     const completedCount = existingCompleted.length;
 
@@ -469,7 +471,7 @@ class TranslationQueueManager {
       const totalPages = job.totalPages;
 
       // Smart Resume: Identify all untranslated page indices
-      const existing = await getChapterTranslations(job.mangaId, job.chapterNumber, job.targetLanguage);
+      const existing = await getChapterTranslations(job.mangaId, job.chapterNumber, job.targetLanguage, job.chapterId);
 
       // Create ordered list of pages to process starting from current page or first untranslated
       const pendingPages: number[] = [];
@@ -524,6 +526,8 @@ class TranslationQueueManager {
             imageDataBase64: isInlineData ? imgUrl : undefined,
             pageNumber: pageNum,
             chapterNumber: job.chapterNumber,
+            mangaId: job.mangaId,
+            chapterId: job.chapterId,
             mangaTitle: job.mangaTitle,
             targetLanguage: job.targetLanguage,
             sourceLanguage: job.sourceLanguage,
@@ -551,7 +555,7 @@ class TranslationQueueManager {
           const hasDialogues = Boolean(result.dialogues && result.dialogues.length > 0 && result.provider !== 'untranslated');
           if (hasDialogues) {
             const storedRecord: StoredTranslatedPage = {
-              id: `${job.mangaId}_ch${job.chapterNumber}_p${pageNum}_${job.targetLanguage}`,
+              id: `${job.mangaId}_ch${job.chapterNumber}_${job.chapterId || 'legacy'}_p${pageNum}_${job.targetLanguage}`,
               mangaId: job.mangaId,
               chapterId: job.chapterId,
               chapterNumber: job.chapterNumber,
