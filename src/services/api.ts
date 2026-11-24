@@ -2217,8 +2217,10 @@ export async function checkAllApis(): Promise<{
   let mangadexStatus: 'healthy' | 'degraded' = 'healthy';
   let mangadexMsg = 'MangaDex API Connected (94,000+ Manga, Chapter Reader Online)';
   try {
-    const res = await fetch('/api/mangadex/manga?limit=1');
+    const res = await fetch('/api/mangadex/manga?limit=1&contentRating[]=safe&contentRating[]=suggestive');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = await res.json();
+    if (!Array.isArray(payload?.data)) throw new Error('Unexpected MangaDex response');
   } catch (e: any) {
     mangadexStatus = 'degraded';
     mangadexMsg = e?.message || 'Proxy timeout';
@@ -2239,7 +2241,7 @@ export async function checkAllApis(): Promise<{
 
   const startTranslator = Date.now();
   let translatorStatus: 'healthy' | 'degraded' = 'healthy';
-  let translatorMsg = 'Gemini 3.8 Flash AI Localization (16+ Languages Active)';
+  let translatorMsg = 'ANIREAD translation endpoint responding';
   try {
     const res = await fetch('/api/translate', {
       method: 'POST',
