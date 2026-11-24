@@ -134,9 +134,6 @@ export const MangaDetailModal: React.FC<Props> = ({
         if (result.availableLanguages && result.availableLanguages.length > 0) {
           setAvailableLanguages(result.availableLanguages);
         }
-        if (result.activeLanguage && result.activeLanguage !== chapterLanguage && chapterLanguage === 'en' && result.chapters.length > 0) {
-          setChapterLanguage(result.activeLanguage);
-        }
         setChapterNotice(result.notice || null);
         setDownloadedSet(downloaded);
         setLoadingChapters(false);
