@@ -1784,9 +1784,10 @@ export async function getMangaChaptersWithInfo(
   }
 
   const contentRatings = '&contentRating[]=safe&contentRating[]=suggestive';
-  const fetchAllFeed = async (mangaDexId: string): Promise<{ data: any[]; total: number }> => {
+  const fetchAllFeed = async (mangaDexId: string): Promise<{ data: any[]; total: number; truncated: boolean }> => {
     const collected: any[] = [];
     let total = 0;
+    let truncated = false;
     // MangaDex feed pages support up to 500 rows and offset+limit up to 10,000.
     for (let offset = 0; offset < 10000; offset += 500) {
       const endpoint =
@@ -1804,21 +1805,27 @@ export async function getMangaChaptersWithInfo(
       const rows = Array.isArray(page?.data) ? page.data : [];
       if (offset === 0) total = Number(page?.total) || rows.length;
       collected.push(...rows);
-      if (rows.length === 0 || rows.length < 500 || collected.length >= total || offset + rows.length >= 10000) break;
+      if (rows.length === 0 || rows.length < 500 || collected.length >= total) break;
+      if (offset + rows.length >= 10000) {
+        truncated = collected.length < total;
+        break;
+      }
       // Keep requests below MangaDex's public rate limit.
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    return { data: collected, total };
+    return { data: collected, total, truncated };
   };
 
   try {
     const primaryFeed = await fetchAllFeed(targetMangaDexId);
     let rawList: any[] = primaryFeed.data;
+    let feedTruncated = primaryFeed.truncated;
 
     // Preserve the earlier Blue Lock chapters published under its linked scanlation series.
     if (targetMangaDexId === '4141c5dc-c525-4df5-afd7-cc7d192a832f') {
-      const legacyFeed = await fetchAllFeed('e2f88804-6111-45c2-b2b2-24a9e6c18c45').catch(() => ({ data: [], total: 0 }));
+      const legacyFeed = await fetchAllFeed('e2f88804-6111-45c2-b2b2-24a9e6c18c45').catch(() => ({ data: [], total: 0, truncated: false }));
       rawList = [...legacyFeed.data, ...rawList];
+      feedTruncated = feedTruncated || legacyFeed.truncated;
     }
 
     const validScans = rawList.filter((chapter: any) =>
@@ -1826,22 +1833,18 @@ export async function getMangaChaptersWithInfo(
       ['safe', 'suggestive'].includes(String(chapter.attributes?.contentRating || 'safe').toLowerCase())
     );
 
-    const langCounts: Record<string, number> = {};
+    const languageChapterKeys = new Map<string, Set<string>>();
     for (const chapter of validScans) {
-      const code = String(chapter.attributes?.translatedLanguage || '').toLowerCase();
-      if (code) langCounts[code] = (langCounts[code] || 0) + 1;
+      const attrs = chapter.attributes || {};
+      const code = String(attrs.translatedLanguage || '').toLowerCase();
+      if (!code) continue;
+      const key = `${String(attrs.volume ?? '')}:${String(attrs.chapter ?? 'Oneshot')}`;
+      if (!languageChapterKeys.has(code)) languageChapterKeys.set(code, new Set());
+      languageChapterKeys.get(code)!.add(key);
     }
-
-    const availableLanguages: { code: string; name: string; count: number }[] = [
-      { code: 'all', name: 'All Translations', count: validScans.length },
-      ...Object.entries(langCounts)
-        .map(([code, count]) => ({
-          code,
-          name: LANGUAGE_NAMES[code] || code.toUpperCase(),
-          count,
-        }))
-        .sort((a, b) => b.count - a.count),
-    ];
+    const langCounts: Record<string, number> = Object.fromEntries(
+      Array.from(languageChapterKeys.entries()).map(([code, keys]) => [code, keys.size])
+    );
 
     const requestedLanguage = String(language || 'en').toLowerCase();
     let fallbackChapterCount = 0;
@@ -1917,12 +1920,27 @@ export async function getMangaChaptersWithInfo(
       })
     );
 
+    const availableLanguages: { code: string; name: string; count: number }[] = [
+      { code: 'all', name: 'All Translations', count: chapterMap.size },
+      ...Object.entries(langCounts)
+        .map(([code, count]) => ({
+          code,
+          name: LANGUAGE_NAMES[code] || code.toUpperCase(),
+          count,
+        }))
+        .sort((a, b) => b.count - a.count),
+    ];
+
     const selectedLanguageName = LANGUAGE_NAMES[requestedLanguage] || requestedLanguage.toUpperCase();
-    const notice = mappedChapters.length === 0
+    const baseNotice = mappedChapters.length === 0
       ? 'No readable chapters are currently listed for this manga.'
       : fallbackChapterCount > 0
         ? `${fallbackChapterCount} chapters have no ${selectedLanguageName} scan. Available source-language scans are included; use the reader translator to convert them into ${selectedLanguageName}.`
         : undefined;
+    const notice = feedTruncated
+      ? [baseNotice, 'MangaDex returned more than 10,000 chapter records; showing the first 10,000 available records.']
+          .filter(Boolean).join(' ')
+      : baseNotice;
 
     return {
       chapters: mappedChapters,
