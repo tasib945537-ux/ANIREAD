@@ -359,6 +359,7 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     hindiSimulcastSchedule = catHindi?.simulcastSchedule;
     hindiBroadcastTiming = catHindi?.broadcastTiming;
     hindiNotes = catHindi?.notes || 'Accredited Hindi voice localization confirmed in official distributor records.';
+  }
 
   tracks.push({
     id: `track_${animeId}_hi`,
