@@ -205,7 +205,6 @@ function splitAndDedupePlatforms(rawList: (string | undefined)[]): string[] {
  */
 export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabilityData {
   const baseTotalEpisodes = anime.episodes && anime.episodes > 0 ? anime.episodes : 0;
-  const effectiveTotalEpisodes = baseTotalEpisodes;
   const animeId = anime.id || anime.malId || 0;
   const animeTitle = anime.title;
   const englishTitle = anime.englishTitle;
@@ -214,6 +213,9 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
   const adminOverrides: AdminDubOverride[] = [];
 
   const normRecord = findNormalizedRecord(animeTitle, englishTitle);
+  const normalizedEpisodeTotal = normRecord?.franchiseTotalEpisodes ||
+    normRecord?.seasons.reduce((sum, season) => sum + (season.episodeCount || 0), 0) || 0;
+  const effectiveTotalEpisodes = baseTotalEpisodes || normalizedEpisodeTotal;
   const dubCatalogResult = getAnimeDubInfo(anime);
 
   const verifiedCrunchyrollUrl =
@@ -444,22 +446,45 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     englishReleaseDate = englishAdmin.releaseDate;
     englishNotes = englishAdmin.notes || 'Manually verified via AniRead Admin Verification Registry.';
   } else if (normEnglish) {
-    if (normEnglish.status === 'CONFIRMED') {
+    const rawCountText = String(normEnglish.dubbedEpisodes ?? '');
+    const parsedCount = Number.isFinite(Number(rawCountText))
+      ? Number(rawCountText)
+      : Number.parseInt(rawCountText.split('/')[0], 10);
+    const confirmedCount = parsedCount > 0
+      ? parsedCount
+      : normEnglish.status === 'CONFIRMED'
+        ? effectiveTotalEpisodes
+        : 0;
+
+    if (normEnglish.status === 'CONFIRMED' || normEnglish.status === 'PARTIALLY_CONFIRMED') {
       englishStatus = 'Verified';
       englishDubType = 'Official';
-      const rawCount = typeof normEnglish.dubbedEpisodes === 'number' ? normEnglish.dubbedEpisodes : effectiveTotalEpisodes;
-      englishDubbedCount = Math.min(effectiveTotalEpisodes, rawCount);
-      englishEpisodeRange = `Episodes 1–${englishDubbedCount}`;
-      englishProvider = normEnglish.platform?.join(' / ') || 'Crunchyroll';
+      englishDubbedCount = effectiveTotalEpisodes > 0
+        ? Math.min(effectiveTotalEpisodes, confirmedCount)
+        : confirmedCount;
+      englishEpisodeRange = englishDubbedCount > 0
+        ? `Episodes 1–${englishDubbedCount}${normEnglish.status === 'PARTIALLY_CONFIRMED' ? ' (Partial)' : ''}`
+        : 'English dub confirmed; episode coverage not listed';
+      englishProvider = normEnglish.platform?.join(' / ') || 'Verified catalog record (platform unspecified)';
       englishSourceUrl = normEnglish.sourceUrls?.[0] || normEnglish.watchUrl || verifiedCrunchyrollUrl;
-      englishNotes = normEnglish.notes || 'Officially verified English dub broadcast.';
-      englishReleaseDate = anime.year ? `Year ${anime.year}` : 'Licensed SimulDub';
-    } else {
+      englishNotes = normEnglish.notes || 'English dub status recorded in the normalized catalog.';
+      englishReleaseDate = normEnglish.lastVerified;
+    } else if (normEnglish.status === 'NOT_AVAILABLE') {
       englishStatus = 'Unavailable';
       englishDubbedCount = 0;
-      englishProvider = normEnglish.platform?.join(' / ') || 'Subtitles Only (Official Licensor)';
-      englishEpisodeRange = 'Subtitles Only (No Dub)';
-      englishNotes = 'No official English dub found in licensor catalog.';
+      englishProvider = normEnglish.platform?.join(' / ') || 'Catalog record';
+      englishEpisodeRange = 'No English dub recorded';
+      englishNotes = normEnglish.notes || 'The normalized catalog records no English dub for this title.';
+    } else {
+      englishStatus = normEnglish.status === 'ANNOUNCED' || normEnglish.status === 'UNVERIFIED'
+        ? 'Unverified'
+        : 'Unknown';
+      englishDubbedCount = 0;
+      englishProvider = normEnglish.platform?.join(' / ') || 'Unverified catalog record';
+      englishEpisodeRange = normEnglish.status === 'ANNOUNCED'
+        ? 'English dub announced; release not confirmed'
+        : 'English dub status not confirmed';
+      englishNotes = normEnglish.notes || 'The available catalog entry does not confirm a released English dub.';
     }
   } else if (dubCatalogResult.hasEnglishDub) {
     englishStatus = 'Verified';
