@@ -1,11 +1,11 @@
 import React from 'react';
-import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud } from 'lucide-react';
+import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud, BookOpen } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { TranslatorDropdown } from './TranslatorDropdown';
 import { getUIText } from '../services/translator';
 import { useFirebase } from '../contexts/FirebaseContext';
 
-export type NavTab = 'anime' | 'upcoming' | 'manga' | 'characters' | 'library' | 'directory';
+export type NavTab = 'anime' | 'upcoming' | 'manga' | 'read' | 'characters' | 'library' | 'directory';
 
 interface Props {
   activeTab: NavTab;
@@ -80,6 +80,17 @@ export const Header: React.FC<Props> = ({
             }`}
           >
             {getUIText('mangaReader', currentLang)}
+          </button>
+          <button
+            onClick={() => onTabChange('read')}
+            className={`transition-colors whitespace-nowrap py-1 flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'read'
+                ? 'text-indigo-300 border-b-2 border-indigo-500 font-semibold'
+                : 'text-slate-400 hover:text-indigo-300'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Read</span>
           </button>
           <button
             onClick={() => onTabChange('characters')}
@@ -228,6 +239,15 @@ export const Header: React.FC<Props> = ({
           }`}
         >
           {getUIText('mangaReader', currentLang)}
+        </button>
+        <button
+          onClick={() => onTabChange('read')}
+          className={`px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors shrink-0 flex items-center gap-1 ${
+            activeTab === 'read' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <BookOpen className="w-3 h-3" />
+          <span>Read</span>
         </button>
         <button
           onClick={() => onTabChange('characters')}
