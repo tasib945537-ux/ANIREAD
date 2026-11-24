@@ -21,17 +21,14 @@ import {
 import { getCrunchyrollDirectUrl } from './crunchyrollLinks';
 import { findVerifiedHindiItem } from './hindiRegistry';
 
-const ADMIN_STORAGE_KEY = 'aniread_admin_dub_overrides_v2';
-const ADMIN_AUTH_KEY = 'aniread_admin_auth_v2';
-
 export interface AdminDubOverride {
   id: string;
   animeId: number | string;
   animeTitle: string;
   language: string;
   languageCode: string;
-  status: AudioVerificationState; // 'Verified' | 'Unverified' | 'Unavailable' | 'Unknown'
-  dubType: DubTypeCategory; // 'Official' | 'Licensed' | 'Original' | 'Unknown'
+  status: AudioVerificationState;
+  dubType: DubTypeCategory;
   dubbedEpisodes: number;
   totalEpisodes: number;
   episodeRange: string;
@@ -45,119 +42,36 @@ export interface AdminDubOverride {
   isExpired?: boolean;
 }
 
-// -------------------------------------------------------------
-// ADMIN AUTHENTICATION
-// -------------------------------------------------------------
+// Client-side admin overrides are intentionally disabled. Dub data must come from
+// the read-only verified catalog/backend, never from a hard-coded client password.
 export function isAdminAuthenticated(): boolean {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(ADMIN_AUTH_KEY) === 'authenticated';
+  return false;
 }
 
-export function adminLogin(pinOrPassword: string): boolean {
-  if (pinOrPassword.trim() === 'admin123' || pinOrPassword.trim() === 'aniread2026') {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(ADMIN_AUTH_KEY, 'authenticated');
-    }
-    return true;
-  }
+export function adminLogin(_pinOrPassword: string): boolean {
   return false;
 }
 
 export function adminLogout(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(ADMIN_AUTH_KEY);
-  }
+  // No client-side admin session exists.
 }
 
-// -------------------------------------------------------------
-// ADMIN OVERRIDES PERSISTENCE
-// -------------------------------------------------------------
 export function getAllAdminOverrides(): AdminDubOverride[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(ADMIN_STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as AdminDubOverride[];
-  } catch (err) {
-    console.warn('Failed to load admin dub overrides:', err);
-    return [];
-  }
+  return [];
 }
 
-export function saveAdminOverride(override: AdminDubOverride): void {
-  const current = getAllAdminOverrides();
-  const idx = current.findIndex(
-    (o) =>
-      (String(o.animeId) === String(override.animeId) ||
-        cleanTitleForMatch(o.animeTitle) === cleanTitleForMatch(override.animeTitle)) &&
-      o.languageCode === override.languageCode
-  );
-
-  if (idx >= 0) {
-    current[idx] = override;
-  } else {
-    current.unshift(override);
-  }
-
-  try {
-    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(current));
-  } catch (err) {
-    console.warn('Failed to save admin dub override locally:', err);
-  }
-
-  // Also proactively send to backend endpoint if available
-  fetch('/api/dubs/admin/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      animeId: override.animeId,
-      animeTitle: override.animeTitle,
-      languageCode: override.languageCode,
-      languageName: override.language,
-      status: override.status === 'Verified' ? 'CONFIRMED' : override.status === 'Unverified' ? 'ANNOUNCED' : 'REPORTED_UNVERIFIED',
-      seasonNumber: 1,
-      episodeRange: override.episodeRange,
-      platformName: override.platform,
-      officialUrl: override.sourceUrl,
-      releaseDate: override.releaseDate,
-      notes: override.notes,
-      sourceName: override.distributor,
-      sourceUrl: override.sourceUrl,
-      adminUser: 'Admin Panel',
-    }),
-  }).catch(() => {
-    // offline or backend proxy silent fallback
-  });
+export function saveAdminOverride(_override: AdminDubOverride): void {
+  console.warn('Client-side dub overrides are disabled.');
 }
 
-export function deleteAdminOverride(overrideId: string): void {
-  const current = getAllAdminOverrides();
-  const filtered = current.filter((o) => o.id !== overrideId);
-  try {
-    localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(filtered));
-  } catch (err) {
-    console.warn('Failed to delete admin override:', err);
-  }
+export function deleteAdminOverride(_overrideId: string): void {
+  // No client-side admin overrides are stored.
 }
 
-export function markOverrideExpired(overrideId: string): void {
-  const current = getAllAdminOverrides();
-  const target = current.find((o) => o.id === overrideId);
-  if (target) {
-    target.isExpired = true;
-    target.status = 'Unavailable';
-    target.notes = `Marked expired / outdated on ${new Date().toLocaleDateString()}.`;
-    try {
-      localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(current));
-    } catch {
-      // quota
-    }
-  }
+export function markOverrideExpired(_overrideId: string): void {
+  // No client-side admin overrides are stored.
 }
 
-// -------------------------------------------------------------
-// SEED INITIAL VERIFIED TRACK MAPS (100% Reliable Evidence)
-// -------------------------------------------------------------
 function findNormalizedRecord(title: string, englishTitle?: string): NormalizedAnimeDubRecord | undefined {
   const cTitle = cleanTitleForMatch(title);
   const cEng = englishTitle ? cleanTitleForMatch(englishTitle) : '';
@@ -290,103 +204,54 @@ function splitAndDedupePlatforms(rawList: (string | undefined)[]): string[] {
  * Never invents or assumes dub data.
  */
 export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabilityData {
-  const baseTotalEpisodes = anime.episodes && anime.episodes > 0 ? anime.episodes : 12;
+  const baseTotalEpisodes = anime.episodes && anime.episodes > 0 ? anime.episodes : 0;
   const animeId = anime.id || anime.malId || 0;
   const animeTitle = anime.title;
   const englishTitle = anime.englishTitle;
 
-  const adminOverrides = getAllAdminOverrides().filter(
-    (o) =>
-      !o.isExpired &&
-      (String(o.animeId) === String(animeId) ||
-        cleanTitleForMatch(o.animeTitle) === cleanTitleForMatch(animeTitle))
-  );
+  // Legacy browser overrides are no longer read; only catalog-backed records can confirm a dub.
+  const adminOverrides: AdminDubOverride[] = [];
 
   const normRecord = findNormalizedRecord(animeTitle, englishTitle);
   const dubCatalogResult = getAnimeDubInfo(anime);
 
-  // Helper to extract voice actors by language
-  const vaByLang = new Map<string, number>();
-  (anime.characters || []).forEach((c) => {
-    (c.voiceActors || []).forEach((va) => {
-      const l = (va.language || '').toLowerCase().trim();
-      vaByLang.set(l, (vaByLang.get(l) || 0) + 1);
-    });
-  });
-
-  const verifiedCrunchyrollUrl = getCrunchyrollDirectUrl(anime) || `https://www.crunchyroll.com/search?q=${encodeURIComponent(animeTitle)}`;
-  const titleLower = animeTitle.toLowerCase();
-  const isEminenceInShadow = titleLower.includes('eminence in shadow') || titleLower.includes('kage no jitsuryokusha');
-  const isExplicitSingleJapaneseTrack = Boolean(
-    anime.audioLanguages &&
-    anime.audioLanguages.length === 1 &&
-    anime.audioLanguages[0].toLowerCase().includes('japanese')
-  );
-
-  // Resolve effectiveTotalEpisodes UPFRONT so Japanese, Hindi, English, Bangla, Matrix & Summary stay 100% consistent
-  let effectiveTotalEpisodes = baseTotalEpisodes;
-  if (titleLower.includes('overgeared') || titleLower.includes('tempal') || titleLower.includes('temppal')) {
-    effectiveTotalEpisodes = 12;
-  } else if (titleLower.includes('blue lock') && (titleLower.includes('season 2') || titleLower.includes('u-20'))) {
-    effectiveTotalEpisodes = 14;
-  } else if (titleLower.includes('tower of god') && titleLower.includes('season 2')) {
-    effectiveTotalEpisodes = 26;
-  } else if (titleLower.includes('naruto shippuden')) {
-    effectiveTotalEpisodes = 500;
-  } else if (titleLower.includes('bleach') && !titleLower.includes('thousand-year')) {
-    effectiveTotalEpisodes = 366;
-  } else if (titleLower.includes('one piece')) {
-    effectiveTotalEpisodes = 1120;
-  } else if (titleLower.includes('detective conan') || titleLower.includes('case closed')) {
-    effectiveTotalEpisodes = 1100;
-  } else if (titleLower.includes('hunter x hunter')) {
-    effectiveTotalEpisodes = 148;
-  } else if (titleLower.includes('boruto')) {
-    effectiveTotalEpisodes = 293;
-  } else if (titleLower.includes('black clover')) {
-    effectiveTotalEpisodes = 170;
-  } else if (titleLower.includes('fairy tail')) {
-    effectiveTotalEpisodes = 328;
-  } else if (titleLower.includes('dragon ball z') && !titleLower.includes('super')) {
-    effectiveTotalEpisodes = 291;
-  }
+  const verifiedCrunchyrollUrl =
+    getCrunchyrollDirectUrl(anime) || `https://www.crunchyroll.com/search?q=${encodeURIComponent(animeTitle)}`;
 
   const tracks: AudioTrack[] = [];
   const platforms: PlatformAvailability[] = [];
 
   // ==========================================
-  // 1. JAPANESE (Original Master Audio Track)
+  // ORIGINAL AUDIO (derived from country-of-origin metadata)
   // ==========================================
-  tracks.push({
-    id: `track_${animeId}_ja`,
-    animeId,
-    language: 'Japanese',
-    languageCode: 'ja',
-    audioType: 'original',
-    verificationStatus: 'Verified',
-    dubType: 'Original',
-    provider: 'Official Japanese Broadcaster / Crunchyroll / Netflix',
-    sourceUrl: verifiedCrunchyrollUrl,
-    verifiedAt: 'November 2026',
-    totalEpisodes: effectiveTotalEpisodes,
-    dubbedEpisodes: effectiveTotalEpisodes,
-    missingEpisodes: 0,
-    episodeRange: `Episodes 1–${effectiveTotalEpisodes}`,
-    releaseDate: anime.year ? `Year ${anime.year}` : 'Original Broadcast',
-    notes: '100% verified original Japanese master audio track with high fidelity stereo/surround sound.',
-    isPartiallyDubbed: false,
-  });
+  const originalAudio = anime.countryOfOrigin === 'KR'
+    ? { language: 'Korean', code: 'ko' }
+    : anime.countryOfOrigin === 'CN'
+      ? { language: 'Chinese', code: 'zh' }
+      : anime.countryOfOrigin === 'JP'
+        ? { language: 'Japanese', code: 'ja' }
+        : null;
 
-  platforms.push({
-    id: `plat_${animeId}_ja_cr`,
-    animeId,
-    platform: 'Crunchyroll',
-    language: 'Japanese',
-    availabilityStatus: 'Available',
-    distributorType: 'Official streaming platform',
-    sourceUrl: verifiedCrunchyrollUrl,
-    verifiedAt: 'November 2026',
-  });
+  if (originalAudio) {
+    tracks.push({
+      id: `track_${animeId}_original`,
+      animeId,
+      language: originalAudio.language,
+      languageCode: originalAudio.code,
+      audioType: 'original',
+      verificationStatus: 'Verified',
+      dubType: 'Original',
+      provider: 'Original-language metadata',
+      sourceUrl: '',
+      verifiedAt: 'AniList country-of-origin metadata',
+      totalEpisodes: effectiveTotalEpisodes,
+      dubbedEpisodes: effectiveTotalEpisodes,
+      missingEpisodes: 0,
+      episodeRange: effectiveTotalEpisodes > 0 ? `Episodes 1–${effectiveTotalEpisodes}` : 'Episode count not listed',
+      notes: 'Original language is inferred from the title country-of-origin metadata. Streaming platform availability is not verified.',
+      isPartiallyDubbed: false,
+    });
+  }
 
   // ==========================================
   // 2. HINDI DUB
@@ -471,7 +336,7 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
           : `Episodes 1–${hindiDubbedCount} (Complete Hindi Dub)`;
       hindiProvider = platJoined;
     }
-  } else if (catHindi?.status === 'Sub Only' || isExplicitSingleJapaneseTrack || isEminenceInShadow) {
+  } else if (catHindi?.status === 'Sub Only') {
     hindiStatus = 'Unavailable';
     hindiDubbedCount = 0;
     hindiProvider = catHindi?.platforms?.join(' / ') || 'Subtitles Only (Official Broadcast)';
@@ -493,15 +358,6 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     hindiSimulcastSchedule = catHindi?.simulcastSchedule;
     hindiBroadcastTiming = catHindi?.broadcastTiming;
     hindiNotes = catHindi?.notes || 'Accredited Hindi voice localization confirmed in official distributor records.';
-  } else if (vaByLang.get('hindi') && vaByLang.get('hindi')! > 0) {
-    hindiStatus = 'Verified';
-    hindiDubType = 'Official';
-    hindiDubbedCount = effectiveTotalEpisodes;
-    hindiEpisodeRange = `Episodes 1–${effectiveTotalEpisodes}`;
-    hindiProvider = 'Crunchyroll India (Voice Cast Accredited)';
-    hindiSourceUrl = buildVerifiedPlatformUrl('Crunchyroll India', animeTitle, anime);
-    hindiNotes = 'Voice cast verified on AniList & MyAnimeList credits.';
-  }
 
   tracks.push({
     id: `track_${animeId}_hi`,
@@ -603,26 +459,7 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
       englishEpisodeRange = 'Subtitles Only (No Dub)';
       englishNotes = 'No official English dub found in licensor catalog.';
     }
-  } else if (isExplicitSingleJapaneseTrack) {
-    englishStatus = 'Unavailable';
-    englishDubbedCount = 0;
-    englishProvider = 'Subtitles Only (Japanese Original)';
-    englishEpisodeRange = 'Subtitles Only (No Dub)';
-    englishNotes = 'Confirmed Subtitles Only release with Japanese original master audio.';
-  } else if (!isEminenceInShadow && vaByLang.get('english') && vaByLang.get('english')! > 0) {
-    englishStatus = 'Verified';
-    englishDubType = 'Official';
-    englishDubbedCount = effectiveTotalEpisodes;
-    englishEpisodeRange = `Episodes 1–${effectiveTotalEpisodes}`;
-    englishProvider = catEnglish?.platforms?.join(' / ') || 'Crunchyroll / Official Licensor';
-    englishSourceUrl = buildVerifiedPlatformUrl(
-      catEnglish?.platforms?.[0] || 'Crunchyroll',
-      animeTitle,
-      anime,
-      catEnglish?.watchUrl ? [catEnglish.watchUrl] : undefined
-    );
-    englishNotes = 'English voice cast accredited on AniList and MyAnimeList.';
-  } else if (!isEminenceInShadow && dubCatalogResult.hasEnglishDub) {
+  } else if (dubCatalogResult.hasEnglishDub) {
     englishStatus = 'Verified';
     englishDubType = 'Official';
     englishDubbedCount = effectiveTotalEpisodes;
@@ -726,13 +563,13 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     banglaSourceUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(animeTitle + ' Bangla Dub Muse India')}`;
     banglaEpisodeRange = `Episodes 1–${effectiveTotalEpisodes} (Complete)`;
     banglaNotes = 'Officially verified Bangla (Bengali) audio dub broadcast by Muse India.';
-  } else if (isEminenceInShadow || isExplicitSingleJapaneseTrack || hasBengaliSubtitles) {
+  } else if (hasBengaliSubtitles) {
     banglaStatus = 'Unavailable';
     banglaDubType = 'Unknown';
     banglaDubbedCount = 0;
     banglaProvider = 'Muse Asia / Muse India (Subtitles Only)';
     banglaEpisodeRange = '0 (Subtitles Only)';
-    banglaNotes = 'No official television or streaming Bangla audio dub has been commissioned. Official Bengali subtitles are broadcast on Muse Asia & Netflix India.';
+    banglaNotes = 'Bengali subtitles are listed, but subtitles alone do not confirm whether a Bangla audio dub exists.';
   }
 
   tracks.push({
