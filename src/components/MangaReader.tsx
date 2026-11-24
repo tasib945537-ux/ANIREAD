@@ -106,7 +106,7 @@ export const MangaReader: React.FC<Props> = ({
   const [viewMode, setViewMode] = useState<'original' | 'translated'>('translated');
   const [targetLang, setTargetLang] = useState<string>(() => {
     try {
-      return sessionStorage.getItem('aniread_target_lang') || localStorage.getItem('aniread_target_lang') || 'bn';
+      return sessionStorage.getItem('aniread_target_lang') || localStorage.getItem('aniread_target_lang') || 'en';
     } catch {
       return 'bn';
     }
