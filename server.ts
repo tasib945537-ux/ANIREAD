@@ -798,12 +798,19 @@ app.get('/api/mangadex/*', async (req: Request, res: Response) => {
 
     const fetchRes = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'AniMangaHub/1.0 (https://ais-dev.run.app)',
+        'User-Agent': 'AniRead/1.0 (+https://github.com/tasib945537-ux/ANIREAD)',
+        Accept: 'application/json',
       },
+      signal: AbortSignal.timeout(12000),
     });
 
-    const data = await fetchRes.json();
-    return res.status(fetchRes.status).json(data);
+    const responseText = await fetchRes.text();
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    if (fetchRes.status === 429) {
+      const retryAfter = fetchRes.headers.get('Retry-After');
+      if (retryAfter) res.setHeader('Retry-After', retryAfter);
+    }
+    return res.status(fetchRes.status).type('application/json').send(responseText);
   } catch (error: any) {
     return res.status(500).json({ error: 'Proxy fetch failed', message: error?.message });
   }
