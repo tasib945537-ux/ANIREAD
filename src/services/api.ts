@@ -1593,7 +1593,7 @@ export async function searchManga(
             hasNextPage
             total
           }
-          media (type: MANGA, search: $search, genre: $genre, sort: $sort) {
+          media (type: MANGA, isAdult: false, search: $search, genre: $genre, sort: $sort) {
             id
             idMal
             countryOfOrigin
