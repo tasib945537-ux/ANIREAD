@@ -205,6 +205,7 @@ function splitAndDedupePlatforms(rawList: (string | undefined)[]): string[] {
  */
 export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabilityData {
   const baseTotalEpisodes = anime.episodes && anime.episodes > 0 ? anime.episodes : 0;
+  const effectiveTotalEpisodes = baseTotalEpisodes;
   const animeId = anime.id || anime.malId || 0;
   const animeTitle = anime.title;
   const englishTitle = anime.englishTitle;
