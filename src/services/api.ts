@@ -33,7 +33,9 @@ const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 async function cachedFetch(url: string, options?: RequestInit, timeoutMs: number = 4500): Promise<any> {
   let fetchUrl = url;
-  if (fetchUrl.startsWith('/') && typeof window === 'undefined') {
+  if (fetchUrl.startsWith('/') && API_BASE_URL) {
+    fetchUrl = `${API_BASE_URL}${fetchUrl}`;
+  } else if (fetchUrl.startsWith('/') && typeof window === 'undefined') {
     fetchUrl = `http://localhost:3000${fetchUrl}`;
   }
 
@@ -418,7 +420,42 @@ export async function searchAnime(
     console.warn('Jikan search fallback error:', jikanErr);
   }
 
-  // 5. Master curated fallback
+  // 5. Kitsu fallback (public JSON:API read endpoint; no key required).
+  try {
+    const qs = new URLSearchParams();
+    if (query?.trim()) qs.set('filter[text]', query.trim());
+    qs.set('page[limit]', String(Math.min(20, perPage)));
+    qs.set('page[offset]', String((page - 1) * Math.min(20, perPage)));
+    qs.set('sort', '-userCount');
+    const kitsu = await cachedFetch(`https://kitsu.io/api/edge/anime?${qs.toString()}`, {
+      headers: { Accept: 'application/vnd.api+json' },
+    }, 9000);
+    const rows = Array.isArray(kitsu?.data) ? kitsu.data : [];
+    if (rows.length) {
+      const items = rows.map(normalizeKitsuAnime).filter((item: AnimeItem) => item.id > 0);
+      return { items, hasNextPage: Boolean(kitsu?.links?.next), total: kitsu?.meta?.count || items.length };
+    }
+  } catch (kitsuErr) {
+    console.warn('Kitsu anime fallback failed:', kitsuErr);
+  }
+
+  // 6. Shikimori fallback through the app backend (keeps its required User-Agent off the client).
+  try {
+    const qs = new URLSearchParams();
+    if (query?.trim()) qs.set('search', query.trim());
+    qs.set('limit', String(Math.min(50, perPage)));
+    qs.set('page', String(page));
+    qs.set('order', sort === 'score' ? 'ranked' : 'popularity');
+    const shikimori = await cachedFetch(`/api/shikimori/animes?${qs.toString()}`, undefined, 9000);
+    if (Array.isArray(shikimori) && shikimori.length) {
+      const items = shikimori.map(normalizeShikimoriAnime).filter((item: AnimeItem) => item.id > 0);
+      return { items, hasNextPage: items.length >= perPage };
+    }
+  } catch (shikimoriErr) {
+    console.warn('Shikimori anime fallback failed:', shikimoriErr);
+  }
+
+  // 7. Master curated fallback
   const fallbackResult = queryAnimeMaster({
     searchQuery: query,
     page: Math.max(1, ((page - 1) % 30) + 1),
@@ -1711,6 +1748,41 @@ export async function searchManga(
     console.warn('MangaDex API fallback failed:', err);
   }
 
+  // Kitsu fallback for manga metadata (MangaDex remains authoritative for chapter reading).
+  try {
+    const qs = new URLSearchParams();
+    if (query?.trim()) qs.set('filter[text]', query.trim());
+    qs.set('page[limit]', '20');
+    qs.set('page[offset]', String((page - 1) * 20));
+    qs.set('sort', '-userCount');
+    const kitsu = await cachedFetch(`https://kitsu.io/api/edge/manga?${qs.toString()}`, {
+      headers: { Accept: 'application/vnd.api+json' },
+    }, 9000);
+    const rows = Array.isArray(kitsu?.data) ? kitsu.data : [];
+    if (rows.length) {
+      const items = rows.map(normalizeKitsuManga).filter((item: MangaItem) => item.title && item.coverImage);
+      return { items, hasNextPage: Boolean(kitsu?.links?.next), total: kitsu?.meta?.count || items.length };
+    }
+  } catch (kitsuErr) {
+    console.warn('Kitsu manga fallback failed:', kitsuErr);
+  }
+
+  // Shikimori manga metadata fallback. Reading chapters still resolve through MangaDex UUIDs.
+  try {
+    const qs = new URLSearchParams();
+    if (query?.trim()) qs.set('search', query.trim());
+    qs.set('limit', '20');
+    qs.set('page', String(page));
+    qs.set('order', sort === 'score' ? 'ranked' : 'popularity');
+    const shikimori = await cachedFetch(`/api/shikimori/mangas?${qs.toString()}`, undefined, 9000);
+    if (Array.isArray(shikimori) && shikimori.length) {
+      const items = shikimori.map(normalizeShikimoriManga).filter((item: MangaItem) => item.id > 0 && item.title);
+      return { items, hasNextPage: items.length >= 20 };
+    }
+  } catch (shikimoriErr) {
+    console.warn('Shikimori manga fallback failed:', shikimoriErr);
+  }
+
   return { items: [], hasNextPage: false };
 }
 
@@ -2368,6 +2440,101 @@ export async function getChapterPages(chapterId: string): Promise<string[]> {
   }
 
   return [];
+}
+
+
+// Additional keyless metadata adapters from the API Deposu shortlist.
+// These are fallbacks only; AniList/Jikan remain the primary anime sources and
+// MangaDex remains the source of chapter IDs, scan languages, and reader pages.
+function normalizeKitsuAnime(item: any): AnimeItem {
+  const attrs = item?.attributes || {};
+  const titles = attrs.titles || {};
+  const title = attrs.canonicalTitle || titles.en || titles.en_jp || titles.ja_jp || 'Untitled Anime';
+  const image = attrs.posterImage?.original || attrs.posterImage?.large || attrs.posterImage?.medium || '';
+  return {
+    id: Number(item.id) || 0,
+    title,
+    englishTitle: titles.en || attrs.abbreviatedTitles?.[0],
+    nativeTitle: titles.ja_jp,
+    coverImage: image,
+    bannerImage: attrs.coverImage?.original || attrs.coverImage?.large || image,
+    format: attrs.subtype || 'TV',
+    status: attrs.status || 'Unknown',
+    episodes: attrs.episodeCount || undefined,
+    duration: attrs.episodeLength ? `${attrs.episodeLength} min` : undefined,
+    year: attrs.startDate ? Number(String(attrs.startDate).slice(0, 4)) || undefined : undefined,
+    score: attrs.averageRating ? Number(attrs.averageRating) / 10 : undefined,
+    synopsis: attrs.synopsis || 'No synopsis provided.',
+    genres: [],
+    sourceApi: 'kitsu',
+  };
+}
+
+function normalizeShikimoriAnime(item: any): AnimeItem {
+  const image = item?.image?.original ? `https://shikimori.one${item.image.original}` : '';
+  return {
+    id: Number(item.id) || 0,
+    malId: item.mal_id ? Number(item.mal_id) : undefined,
+    title: item.russian || item.name || 'Untitled Anime',
+    englishTitle: item.name,
+    nativeTitle: item.japanese,
+    coverImage: image,
+    format: item.kind || 'TV',
+    status: item.status || 'Unknown',
+    episodes: Number(item.episodes) || undefined,
+    year: item.aired_on ? Number(String(item.aired_on).slice(0, 4)) || undefined : undefined,
+    score: item.score ? Number(item.score) : undefined,
+    synopsis: item.description_html ? String(item.description_html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : (item.description || 'No synopsis provided.'),
+    genres: (item.genres || []).map((g: any) => g.russian || g.name).filter(Boolean),
+    studios: (item.studios || []).map((studio: any) => studio.name).filter(Boolean),
+    sourceApi: 'shikimori',
+  };
+}
+
+function normalizeKitsuManga(item: any): MangaItem {
+  const attrs = item?.attributes || {};
+  const titles = attrs.titles || {};
+  const title = attrs.canonicalTitle || titles.en || titles.en_jp || titles.ja_jp || 'Untitled Manga';
+  return {
+    id: Number(item.id) || item.id,
+    title,
+    englishTitle: titles.en || undefined,
+    nativeTitle: titles.ja_jp || undefined,
+    coverImage: attrs.posterImage?.original || attrs.posterImage?.large || attrs.posterImage?.medium || '',
+    bannerImage: attrs.coverImage?.original || attrs.coverImage?.large,
+    format: 'Manga',
+    authors: [],
+    status: attrs.status || 'Unknown',
+    releaseYear: attrs.startDate ? Number(String(attrs.startDate).slice(0, 4)) || undefined : undefined,
+    genres: [],
+    chapterCount: Number(attrs.chapterCount) || undefined,
+    volumeCount: Number(attrs.volumeCount) || undefined,
+    synopsis: attrs.synopsis || 'No synopsis provided.',
+    score: attrs.averageRating ? Number(attrs.averageRating) / 10 : undefined,
+    sourceApi: 'kitsu',
+  };
+}
+
+function normalizeShikimoriManga(item: any): MangaItem {
+  const image = item?.image?.original ? `https://shikimori.one${item.image.original}` : '';
+  return {
+    id: Number(item.id) || 0,
+    malId: item.mal_id ? Number(item.mal_id) : undefined,
+    title: item.russian || item.name || 'Untitled Manga',
+    englishTitle: item.name,
+    nativeTitle: item.japanese,
+    coverImage: image,
+    format: item.kind || 'Manga',
+    authors: (item.publishers || []).map((publisher: any) => publisher.name).filter(Boolean),
+    status: item.status || 'Unknown',
+    releaseYear: item.aired_on ? Number(String(item.aired_on).slice(0, 4)) || undefined : undefined,
+    genres: (item.genres || []).map((g: any) => g.russian || g.name).filter(Boolean),
+    chapterCount: Number(item.volumes) || undefined,
+    volumeCount: Number(item.volumes) || undefined,
+    synopsis: item.description_html ? String(item.description_html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : (item.description || 'No synopsis provided.'),
+    score: item.score ? Number(item.score) : undefined,
+    sourceApi: 'shikimori',
+  };
 }
 
 // ---------------- Helper Normalizers ---------------- //
