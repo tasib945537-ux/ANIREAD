@@ -2249,6 +2249,11 @@ export async function checkAllApis(): Promise<{
       body: JSON.stringify({ text: 'Hello', targetLanguage: 'Bengali' }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = await res.json();
+    if (!payload?.translatedText || payload.translatedText.trim() === 'Hello') {
+      throw new Error(payload?.notice || 'Translation provider did not return translated text');
+    }
+    translatorMsg = `Text translation responding via ${payload.provider || 'backend'}`;
   } catch (e: any) {
     translatorStatus = 'degraded';
     translatorMsg = e?.message || 'Service unavailable';
