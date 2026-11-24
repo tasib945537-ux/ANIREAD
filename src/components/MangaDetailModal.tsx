@@ -73,6 +73,10 @@ export const MangaDetailModal: React.FC<Props> = ({
   useEffect(() => {
     let isMounted = true;
     setManga(initialManga);
+    setChapterLanguage('en');
+    setChapters([]);
+    setAvailableLanguages([]);
+    setChapterNotice(null);
     setLoadingDetails(true);
     setTranslatedSynopsis(null);
     setShowGoogleTranslator(false);
@@ -113,7 +117,7 @@ export const MangaDetailModal: React.FC<Props> = ({
     };
   }, [initialManga.id, initialManga.title]);
 
-  // 2. Load chapters with multi-language fallback
+  // 2. Load chapters strictly in the selected language
   useEffect(() => {
     let isMounted = true;
     setLoadingChapters(true);
