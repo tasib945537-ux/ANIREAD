@@ -40,6 +40,15 @@ export const SUPPORTED_LANGUAGES: TranslationTarget[] = [
 const memoryCache = new Map<string, string>();
 const inFlightTranslations = new Map<string, Promise<string>>();
 
+function stableTextHash(value: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
 /**
  * Translate text into the target language using server-side Gemini & Google Translate API with client caching and direct client fallback
  */
@@ -56,7 +65,7 @@ export async function translateText(
   const langObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLangCode);
   const targetLangName = langObj ? langObj.name : targetLangCode;
 
-  const cacheKey = `tr:${targetLangCode}:${text.slice(0, 100)}:${text.length}`;
+  const cacheKey = `tr:${sourceLang.toLowerCase()}:${targetLangCode}:${stableTextHash(text)}:${text.length}`;
   if (memoryCache.has(cacheKey)) {
     return memoryCache.get(cacheKey)!;
   }
@@ -198,6 +207,8 @@ function getLocalizedPageLabel(pageNumber: number, targetLanguage: string): stri
 export async function translateMangaPage(params: {
   imageUrl?: string;
   imageDataBase64?: string;
+  mangaId?: string | number;
+  chapterId?: string;
   pageNumber: number;
   chapterNumber?: string;
   mangaTitle?: string;
@@ -208,6 +219,8 @@ export async function translateMangaPage(params: {
   const {
     imageUrl = '',
     imageDataBase64,
+    mangaId,
+    chapterId,
     pageNumber = 1,
     chapterNumber = '1',
     mangaTitle = 'Manga',
@@ -216,7 +229,9 @@ export async function translateMangaPage(params: {
     force = false,
   } = params;
 
-  const cacheKey = `manga_page_v4:${mangaTitle}:${chapterNumber}:${pageNumber}:${targetLanguage}`;
+  const mangaIdentity = String(mangaId ?? mangaTitle);
+  const chapterIdentity = String(chapterId ?? chapterNumber);
+  const cacheKey = `manga_page_v5:${encodeURIComponent(mangaIdentity)}:${encodeURIComponent(chapterIdentity)}:${chapterNumber}:${pageNumber}:${sourceLanguage.toLowerCase()}:${targetLanguage}`;
   if (!force && pageMemoryCache.has(cacheKey)) {
     const cachedItem = pageMemoryCache.get(cacheKey)!;
     if (!cachedItem.rateLimited && cachedItem.provider !== 'untranslated' && cachedItem.dialogues?.length > 0) {
@@ -250,6 +265,8 @@ export async function translateMangaPage(params: {
       body: JSON.stringify({
         imageUrl,
         imageDataBase64,
+        mangaId,
+        chapterId,
         pageNumber,
         chapterNumber,
         mangaTitle,
