@@ -400,8 +400,10 @@ app.post('/api/translate-page', async (req: Request, res: Response) => {
     const targetName =
       CODE_TO_NAME[targetCode] ||
       (targetCode === 'bn' ? 'Bengali (Bangla)' : targetCode === 'hi' ? 'Hindi' : targetLanguage);
-    const sourceCode = resolveLangCode(String(sourceLanguage || 'Auto'));
-    const sourceName = CODE_TO_NAME[sourceCode] || sourceLanguage;
+    const sourceCode = String(sourceLanguage || 'Auto').toLowerCase() === 'auto'
+      ? 'auto'
+      : resolveLangCode(String(sourceLanguage));
+    const sourceName = sourceCode === 'auto' ? 'auto-detected' : CODE_TO_NAME[sourceCode] || sourceLanguage;
     const cacheKey = `${mangaId || mangaTitle}:${chapterId || chapterNumber}:${chapterNumber}:p${pageNumber}:${sourceCode}:${targetCode}`;
     const defaultSummary = localizedPageLabel(pageNumber, targetCode);
 
