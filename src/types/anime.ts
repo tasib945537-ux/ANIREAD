@@ -163,7 +163,7 @@ export interface AnimeItem {
   airedString?: string;
   isLicensed?: boolean;
   countryOfOrigin?: string;
-  sourceApi: 'jikan' | 'anilist' | 'mangadex';
+  sourceApi: 'jikan' | 'anilist' | 'mangadex' | 'kitsu' | 'shikimori';
   characters?: CharacterPreview[];
   pictures?: string[];
   relatedMangaId?: string | number;
@@ -254,7 +254,7 @@ export interface MangaItem {
   score?: number;
   rank?: number;
   popularity?: number;
-  sourceApi: 'mangadex' | 'jikan' | 'anilist';
+  sourceApi: 'mangadex' | 'jikan' | 'anilist' | 'kitsu' | 'shikimori';
   characters?: CharacterPreview[];
   relations?: AnimeRelation[];
   serializations?: string[];
