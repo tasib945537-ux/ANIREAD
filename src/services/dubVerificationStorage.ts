@@ -292,14 +292,11 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     hindiNotes = hindiAdmin.notes || 'Manually verified via AniRead Admin Verification Registry.';
   } else if (rebuiltHindi) {
     const rebuiltPlatforms = rebuiltHindi.hindiPlatforms || [];
-    const platJoined = rebuiltPlatforms.join(' / ') || 'Crunchyroll India';
-    const preferredPlat = rebuiltPlatforms[0] || 'Crunchyroll India';
-    hindiSourceUrl = buildVerifiedPlatformUrl(
-      preferredPlat,
-      animeTitle,
-      anime,
-      rebuiltHindi.hindiSourceUrls
-    );
+    const platJoined = rebuiltPlatforms.join(' / ') || 'Verified catalog record (platform unspecified)';
+    const preferredPlat = rebuiltPlatforms[0];
+    hindiSourceUrl = preferredPlat
+      ? buildVerifiedPlatformUrl(preferredPlat, animeTitle, anime, rebuiltHindi.hindiSourceUrls)
+      : rebuiltHindi.hindiSourceUrls?.[0] || verifiedCrunchyrollUrl;
     hindiAirTime = rebuiltHindi.airTime;
     hindiSimulcastSchedule = rebuiltHindi.simulcastSchedule;
     hindiBroadcastTiming = rebuiltHindi.broadcastTiming;
@@ -350,13 +347,10 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     hindiDubType = 'Official';
     hindiDubbedCount = effectiveTotalEpisodes;
     hindiEpisodeRange = `Episodes 1–${effectiveTotalEpisodes}`;
-    hindiProvider = catHindi?.platforms?.join(' / ') || 'Crunchyroll India';
-    hindiSourceUrl = buildVerifiedPlatformUrl(
-      catHindi?.platforms?.[0] || 'Crunchyroll India',
-      animeTitle,
-      anime,
-      catHindi?.watchUrl ? [catHindi.watchUrl] : undefined
-    );
+    hindiProvider = catHindi?.platforms?.join(' / ') || 'Verified catalog record (platform unspecified)';
+    hindiSourceUrl = catHindi?.watchUrl || (catHindi?.platforms?.[0]
+      ? buildVerifiedPlatformUrl(catHindi.platforms[0], animeTitle, anime)
+      : verifiedCrunchyrollUrl);
     hindiAirTime = catHindi?.airTime;
     hindiSimulcastSchedule = catHindi?.simulcastSchedule;
     hindiBroadcastTiming = catHindi?.broadcastTiming;
@@ -394,10 +388,8 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
       ...(rebuiltHindi?.hindiPlatforms || []),
       ...(catHindi?.platforms || []),
       ...(normHindi?.platform || []),
-      hindiProvider,
     ]);
-    const finalHindiPlatforms =
-      resolvedHindiPlatforms.length > 0 ? resolvedHindiPlatforms : ['Crunchyroll India'];
+    const finalHindiPlatforms = resolvedHindiPlatforms;
 
     finalHindiPlatforms.forEach((platName, idx) => {
       platforms.push({
@@ -491,13 +483,10 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
     englishDubType = 'Official';
     englishDubbedCount = effectiveTotalEpisodes;
     englishEpisodeRange = `Episodes 1–${effectiveTotalEpisodes}`;
-    englishProvider = catEnglish?.platforms?.join(' / ') || 'Crunchyroll';
-    englishSourceUrl = buildVerifiedPlatformUrl(
-      catEnglish?.platforms?.[0] || 'Crunchyroll',
-      animeTitle,
-      anime,
-      catEnglish?.watchUrl ? [catEnglish.watchUrl] : undefined
-    );
+    englishProvider = catEnglish?.platforms?.join(' / ') || 'Verified catalog record (platform unspecified)';
+    englishSourceUrl = catEnglish?.watchUrl || (catEnglish?.platforms?.[0]
+      ? buildVerifiedPlatformUrl(catEnglish.platforms[0], animeTitle, anime)
+      : verifiedCrunchyrollUrl);
     englishNotes = catEnglish?.notes || 'Officially verified international English dub.';
   }
 
@@ -529,10 +518,8 @@ export function getAnimeAudioAvailability(anime: AnimeItem): AnimeAudioAvailabil
       ...(englishAdmin?.platform ? [englishAdmin.platform] : []),
       ...(normEnglish?.platform || []),
       ...(catEnglish?.platforms || []),
-      englishProvider,
     ]);
-    const finalEnglishPlatforms =
-      resolvedEnglishPlatforms.length > 0 ? resolvedEnglishPlatforms : ['Crunchyroll'];
+    const finalEnglishPlatforms = resolvedEnglishPlatforms;
 
     finalEnglishPlatforms.forEach((platName, idx) => {
       platforms.push({
