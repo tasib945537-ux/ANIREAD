@@ -238,7 +238,7 @@ app.post('/api/translate', async (req: Request, res: Response) => {
       return res.json({ translatedText: trimmedText, cached: true });
     }
 
-    const cacheKey = `${targetCode}:${trimmedText.slice(0, 150)}:${trimmedText.length}`;
+    const cacheKey = `${sourceCode}:${targetCode}:${trimmedText}`;
     if (translationCache.has(cacheKey)) {
       return res.json({ translatedText: translationCache.get(cacheKey), cached: true, provider: 'cache' });
     }
@@ -391,6 +391,8 @@ app.post('/api/translate-page', async (req: Request, res: Response) => {
       mangaTitle = 'Manga',
       targetLanguage = 'bn',
       sourceLanguage = 'Auto',
+      mangaId = '',
+      chapterId = '',
       force = false,
     } = req.body;
 
@@ -398,7 +400,9 @@ app.post('/api/translate-page', async (req: Request, res: Response) => {
     const targetName =
       CODE_TO_NAME[targetCode] ||
       (targetCode === 'bn' ? 'Bengali (Bangla)' : targetCode === 'hi' ? 'Hindi' : targetLanguage);
-    const cacheKey = `${mangaTitle}:${chapterNumber}:p${pageNumber}:${targetCode}`;
+    const sourceName = CODE_TO_NAME[sourceCode] || sourceLanguage;
+    const sourceCode = String(sourceLanguage || 'auto').toLowerCase();
+    const cacheKey = `${mangaId || mangaTitle}:${chapterId || chapterNumber}:${chapterNumber}:p${pageNumber}:${sourceCode}:${targetCode}`;
     const defaultSummary = localizedPageLabel(pageNumber, targetCode);
 
     if (!force && mangaPageCache.has(cacheKey)) {
@@ -555,7 +559,7 @@ app.post('/api/translate-page', async (req: Request, res: Response) => {
     // Attempt 1: Multimodal Vision with Gemini 4 Hydrogen
     try {
       const prompt = `You are an expert manga OCR & localization translator.
-Analyze this manga page image (Page ${pageNumber} of "${mangaTitle}", Chapter ${chapterNumber}).
+Analyze this manga page image (Page ${pageNumber} of "${mangaTitle}", Chapter ${chapterNumber}). The source language is ${sourceName}; translate only into ${targetName}.
 
 MANDATORY INSTRUCTIONS:
 Detect and translate EVERY SINGLE piece of visible text across all panels of the page without missing any speech bubble, thought bubble, caption box, margin title, vertical banner, or sound effect (SFX).
