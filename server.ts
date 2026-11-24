@@ -400,8 +400,8 @@ app.post('/api/translate-page', async (req: Request, res: Response) => {
     const targetName =
       CODE_TO_NAME[targetCode] ||
       (targetCode === 'bn' ? 'Bengali (Bangla)' : targetCode === 'hi' ? 'Hindi' : targetLanguage);
+    const sourceCode = resolveLangCode(String(sourceLanguage || 'Auto'));
     const sourceName = CODE_TO_NAME[sourceCode] || sourceLanguage;
-    const sourceCode = String(sourceLanguage || 'auto').toLowerCase();
     const cacheKey = `${mangaId || mangaTitle}:${chapterId || chapterNumber}:${chapterNumber}:p${pageNumber}:${sourceCode}:${targetCode}`;
     const defaultSummary = localizedPageLabel(pageNumber, targetCode);
 
@@ -834,24 +834,12 @@ app.get(['/api/manga-page', '/api/proxy-image', '/api/image-proxy'], async (req:
     }
 
     const host = parsed.hostname.toLowerCase();
-    const isAllowed =
-      host.endsWith('mangadex.org') ||
-      host.endsWith('mangadex.network') ||
-      host.endsWith('anilist.co') ||
-      host.endsWith('myanimelist.net') ||
-      host.endsWith('unsplash.com') ||
-      host.endsWith('kitsu.io') ||
-      host.endsWith('kitsu.app') ||
-      host.endsWith('anime-planet.com') ||
-      host.endsWith('anidb.net') ||
-      host.endsWith('livechart.me') ||
-      host.endsWith('notify.moe') ||
-      host.endsWith('imgur.com') ||
-      host.endsWith('crunchyroll.com') ||
-      host.endsWith('googleusercontent.com') ||
-      host.endsWith('gstatic.com') ||
-      host.endsWith('nocookie.net') ||
-      host.endsWith('fandom.com');
+    const allowedDomains = [
+      'mangadex.org', 'mangadex.network', 'anilist.co', 'myanimelist.net', 'unsplash.com',
+      'kitsu.io', 'kitsu.app', 'anime-planet.com', 'anidb.net', 'livechart.me', 'notify.moe',
+      'imgur.com', 'crunchyroll.com', 'googleusercontent.com', 'gstatic.com', 'nocookie.net', 'fandom.com',
+    ];
+    const isAllowed = allowedDomains.some((domain) => host === domain || host.endsWith('.' + domain));
 
     if (!isAllowed) {
       return res.status(403).send('Forbidden hostname');
@@ -925,8 +913,7 @@ app.get(['/api/manga-page', '/api/proxy-image', '/api/image-proxy'], async (req:
     }
 
     if (!imageRes || !imageRes.ok) {
-      // Rather than returning an error box, redirect to high-fidelity anime artwork
-      return res.redirect('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80');
+      return res.status(404).send('Image not found on the source CDN');
     }
 
     const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
@@ -936,7 +923,7 @@ app.get(['/api/manga-page', '/api/proxy-image', '/api/image-proxy'], async (req:
     return res.send(Buffer.from(arrayBuffer));
   } catch (error: any) {
     console.error('Image proxy error:', error);
-    return res.redirect('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800&auto=format&fit=crop&q=80');
+    return res.status(502).send('Image proxy temporarily unavailable');
   }
 });
 
