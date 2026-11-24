@@ -497,7 +497,7 @@ export const MangaDetailModal: React.FC<Props> = ({
               </div>
             )}
 
-            {/* Chapter Notice (if auto-switched or notice available) */}
+            {/* Chapter language note (including chapters with source-language fallback) */}
             {chapterNotice && (
               <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-700/50 flex items-center gap-2 text-xs text-indigo-300">
                 <Info className="w-4 h-4 shrink-0 text-indigo-400" />
