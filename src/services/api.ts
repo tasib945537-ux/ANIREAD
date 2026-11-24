@@ -2050,7 +2050,7 @@ export async function getMangaDetails(
 
   // 2. Resolve target MangaDex ID
   const effectiveTitle = aniMedia?.title?.english || aniMedia?.title?.romaji || mangaTitle || '';
-  const targetMangaDexId = resolveMangaDexId(aniMedia?.id || id, effectiveTitle);
+  let targetMangaDexId = resolveMangaDexId(aniMedia?.id || id, effectiveTitle);
 
   // 3. Optional Jikan fetch with timeout protection
   const effectiveMalId = aniMedia?.idMal || malId;
@@ -2076,6 +2076,7 @@ export async function getMangaDetails(
   let availableLanguages: { code: string; name: string; count: number }[] = [];
   try {
     const chapterInfo = await getMangaChaptersWithInfo(targetMangaDexId, 'all', effectiveTitle);
+    targetMangaDexId = chapterInfo.mangaDexId || targetMangaDexId;
     availableLanguages = chapterInfo.availableLanguages;
   } catch (err) {
     console.warn('Failed to load MangaDex language stats for details:', err);
