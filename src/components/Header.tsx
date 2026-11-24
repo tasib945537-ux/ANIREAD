@@ -79,7 +79,7 @@ export const Header: React.FC<Props> = ({
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            {getUIText('mangaReader', currentLang)}
+            Explore Manga
           </button>
           <button
             onClick={() => onTabChange('read')}
