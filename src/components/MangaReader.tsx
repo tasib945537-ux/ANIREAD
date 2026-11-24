@@ -619,6 +619,7 @@ export const MangaReader: React.FC<Props> = ({
       mangaCoverImage: mangaCover,
       pageUrls: pages,
       targetLanguage: targetLang,
+      sourceLanguage: chapter.language || 'Auto',
       forceRetranslate,
       startFromPage: currentPage,
     });
@@ -641,7 +642,7 @@ export const MangaReader: React.FC<Props> = ({
       // ignore
     }
     // Load previously translated pages for the selected language
-    getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), code).then((saved) => {
+    getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), code, chapter.id).then((saved) => {
       setTranslatedPages(saved || {});
     });
     setFailedPageSet(new Set());
