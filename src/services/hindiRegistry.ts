@@ -1,7 +1,9 @@
 import { AnimeItem } from '../types/anime';
 import { VERIFIED_HINDI_ANIME_CATALOG } from './verifiedHindiAnimeCatalog';
 
-const rawApiBase = import.meta.env.VITE_API_BASE_URL || '';
+const rawApiBase = typeof import.meta !== 'undefined' && import.meta.env
+  ? import.meta.env.VITE_API_BASE_URL || ''
+  : (typeof process !== 'undefined' ? process.env.VITE_API_BASE_URL || '' : '');
 const API_BASE_URL = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
 
 export interface ServerHindiDubRecord {
