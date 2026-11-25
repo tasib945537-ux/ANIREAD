@@ -852,7 +852,7 @@ app.get('/api/mangadex/*', async (req: Request, res: Response) => {
 app.options(['/api/manga-page', '/api/proxy-image', '/api/image-proxy'], (_req: Request, res: Response) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Gemini-API-Key');
   return res.sendStatus(204);
 });
 
