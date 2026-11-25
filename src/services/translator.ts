@@ -1,5 +1,6 @@
 import { TranslationTarget } from '../types/anime';
 import { getGeminiApiKey } from './geminiApiKey';
+import { apiUrl } from './apiUrl';
 
 export const SUPPORTED_LANGUAGES: TranslationTarget[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '' },
@@ -89,9 +90,9 @@ export async function translateText(
   const translationPromise = (async () => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-      const res = await fetch('/api/translate', {
+      const res = await fetch(apiUrl('/api/translate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(getGeminiApiKey() ? { 'X-Gemini-API-Key': getGeminiApiKey() } : {}) },
         body: JSON.stringify({
@@ -260,7 +261,7 @@ export async function translateMangaPage(params: {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-    const res = await fetch('/api/translate-page', {
+    const res = await fetch(apiUrl('/api/translate-page'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(getGeminiApiKey() ? { 'X-Gemini-API-Key': getGeminiApiKey() } : {}) },
       body: JSON.stringify({
