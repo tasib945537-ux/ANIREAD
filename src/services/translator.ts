@@ -1,5 +1,4 @@
 import { TranslationTarget } from '../types/anime';
-import { apiUrl } from './apiUrl';
 
 export const SUPPORTED_LANGUAGES: TranslationTarget[] = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '' },
@@ -87,63 +86,28 @@ export async function translateText(
   }
 
   const translationPromise = (async () => {
+    // Keyless Google Translate web endpoint. This is a public endpoint, not a
+    // guaranteed SLA; failures return the original text rather than requiring an API key.
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-      const res = await fetch(apiUrl('/api/translate'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(getGeminiApiKey() ? { 'X-Gemini-API-Key': getGeminiApiKey() } : {}) },
-        body: JSON.stringify({
-          text,
-          targetLanguage: targetLangName,
-          sourceLanguage: sourceLang,
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (res.ok) {
-        const data = await res.json();
-        const result = data.translatedText || text;
-        if (result && result !== text) {
-          memoryCache.set(cacheKey, result);
-          try {
-            localStorage.setItem(cacheKey, result);
-          } catch {
-            // ignore
-          }
-          return result;
-        }
-      }
-    } catch {
-      // Server timed out or network error, attempt direct client fallback
-    }
-
-    // Direct client fallback via Google Translate GTX (100% reliability, sub-100ms)
-    try {
-      const src = sourceLang.toLowerCase() === 'auto' ? 'auto' : (sourceLang.length === 2 ? sourceLang : 'auto');
+      const src = sourceLang.toLowerCase() === 'auto'
+        ? 'auto'
+        : (sourceLang.length === 2 ? sourceLang : 'auto');
       const gtUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${encodeURIComponent(targetLangCode)}&dt=t&q=${encodeURIComponent(text)}`;
-      const fallbackRes = await fetch(gtUrl);
-      if (fallbackRes.ok) {
-        const gtData = await fallbackRes.json();
-        if (Array.isArray(gtData) && Array.isArray(gtData[0])) {
-          const parts = gtData[0].map((chunk: any) => (chunk && chunk[0] ? chunk[0] : '')).join('');
-          if (parts) {
-            memoryCache.set(cacheKey, parts);
-            try {
-              localStorage.setItem(cacheKey, parts);
-            } catch {
-              // ignore
-            }
-            return parts;
+      const response = await fetch(gtUrl, { signal: AbortSignal.timeout(15000) });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && Array.isArray(data[0])) {
+          const translated = data[0].map((chunk: any) => chunk?.[0] || '').join('');
+          if (translated) {
+            memoryCache.set(cacheKey, translated);
+            try { localStorage.setItem(cacheKey, translated); } catch { /* storage quota */ }
+            return translated;
           }
         }
       }
     } catch {
-      // ignore
+      // Public endpoint unavailable; keep original text and allow retry later.
     }
-
     return text;
   })().finally(() => {
     inFlightTranslations.delete(cacheKey);
