@@ -217,7 +217,7 @@ async function translateMangaPageWithLocalOcr(params: {
       pageNumber, imageUrl, targetLanguage, sourceLanguage, pageTitle: `Page ${pageNumber}`,
       summary: 'Japanese manga text detected locally',
       summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
-      dialogues, provider: 'local-tesseract-gtx', translatedAt: Date.now(),
+      dialogues, provider: 'local-tesseract-gtx',
       notice: 'Gemini-free OCR is active. Results depend on scan quality and text direction.',
     };
   } catch (error: any) {
@@ -290,66 +290,6 @@ export async function translateMangaPage(params: {
     try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
   }
   return localResult;
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45000);
-
-    const res = await fetch(apiUrl('/api/translate-page'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(getGeminiApiKey() ? { 'X-Gemini-API-Key': getGeminiApiKey() } : {}) },
-      body: JSON.stringify({
-        imageUrl,
-        imageDataBase64,
-        mangaId,
-        chapterId,
-        pageNumber,
-        chapterNumber,
-        mangaTitle,
-        targetLanguage,
-        sourceLanguage,
-        force,
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    const data: TranslatedMangaPageResult = await res.json();
-
-    // Only cache genuine successful translations with dialogues — never cache untranslated errors or rate-limits
-    if (!data.rateLimited && data.provider !== 'untranslated' && data.dialogues?.length > 0) {
-      pageMemoryCache.set(cacheKey, data);
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-      } catch {
-        // quota
-      }
-    }
-    return data;
-  } catch (err: any) {
-    console.warn('translateMangaPage call failed:', err);
-    const fallback: TranslatedMangaPageResult = {
-      pageNumber,
-      imageUrl,
-      targetLanguage,
-      sourceLanguage,
-      pageTitle: `Page ${pageNumber}`,
-      summary: `Page ${pageNumber}`,
-      summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
-      dialogues: [],
-      provider: 'untranslated',
-      errorCode: 'NETWORK_ERROR',
-      notice:
-        err?.name === 'AbortError'
-          ? 'Page OCR timed out after 45s. Please tap Retry.'
-          : 'Translation service unavailable or image could not be processed.',
-    };
-    return fallback;
-  }
 }
 
 /**
