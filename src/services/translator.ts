@@ -206,6 +206,89 @@ function getLocalizedPageLabel(pageNumber: number, targetLanguage: string): stri
   return `Page ${pageNumber}`;
 }
 
+let localJapaneseOcrWorker: Promise<any> | null = null;
+
+async function getLocalJapaneseOcrWorker() {
+  if (!localJapaneseOcrWorker) {
+    localJapaneseOcrWorker = import('tesseract.js').then(({ createWorker }) =>
+      createWorker('jpn_vert', 1, { logger: () => undefined })
+    ).catch((error) => { localJapaneseOcrWorker = null; throw error; });
+  }
+  return localJapaneseOcrWorker;
+}
+
+async function translateMangaPageWithLocalOcr(params: {
+  imageUrl: string; imageDataBase64?: string; pageNumber: number;
+  targetLanguage: string; sourceLanguage: string;
+}): Promise<TranslatedMangaPageResult> {
+  const { imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage } = params;
+  try {
+    let image: Blob;
+    if (imageDataBase64) {
+      const response = await fetch(imageDataBase64.startsWith('data:') ? imageDataBase64 : `data:image/jpeg;base64,${imageDataBase64}`);
+      image = await response.blob();
+    } else {
+      const response = await fetch(imageUrl, { mode: 'cors', credentials: 'omit' });
+      if (!response.ok) throw new Error(`Image request failed (${response.status})`);
+      image = await response.blob();
+    }
+    let worker = await getLocalJapaneseOcrWorker();
+    let recognition = await worker.recognize(image);
+    let lines = (recognition.data.lines || []).filter((line: any) =>
+      String(line.text || '').trim() && Number(line.confidence || 0) >= 20
+    );
+    if (!lines.length) {
+      await worker.terminate();
+      localJapaneseOcrWorker = null;
+      const { createWorker } = await import('tesseract.js');
+      localJapaneseOcrWorker = createWorker('jpn', 1, { logger: () => undefined });
+      worker = await localJapaneseOcrWorker;
+      recognition = await worker.recognize(image);
+      lines = (recognition.data.lines || []).filter((line: any) =>
+        String(line.text || '').trim() && Number(line.confidence || 0) >= 20
+      );
+    }
+    if (!lines.length) return {
+      pageNumber, imageUrl, targetLanguage, sourceLanguage, pageTitle: `Page ${pageNumber}`,
+      summary: `Page ${pageNumber}`, summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
+      dialogues: [], provider: 'local-ocr-empty', errorCode: 'OCR_NO_TEXT',
+      notice: 'No readable text was detected in this scan. Try a clearer page image.',
+    };
+    const width = Math.max(1, recognition.data.imageSize?.width || 1);
+    const height = Math.max(1, recognition.data.imageSize?.height || 1);
+    const dialogues = await Promise.all(lines.slice(0, 80).map(async (line: any, index: number) => {
+      const originalText = String(line.text || '').replace(/\s+/g, ' ').trim();
+      const translatedText = await translateText(originalText, targetLanguage, sourceLanguage === 'Auto' ? 'Japanese' : sourceLanguage);
+      const b = line.bbox || { x0: 0, y0: 0, x1: width, y1: height };
+      const xmin = Math.max(0, Math.min(1, b.x0 / width));
+      const ymin = Math.max(0, Math.min(1, b.y0 / height));
+      const xmax = Math.max(xmin + .01, Math.min(1, b.x1 / width));
+      const ymax = Math.max(ymin + .01, Math.min(1, b.y1 / height));
+      return {
+        id: index + 1, originalText, translatedText: translatedText || originalText,
+        detectedLanguage: 'Japanese', type: 'bubble' as const, direction: 'vertical' as const,
+        confidence: Math.max(0, Math.min(1, Number(line.confidence || 0) / 100)),
+        box: { ymin, xmin, ymax, xmax }, top: ymin * 100, left: xmin * 100,
+        width: (xmax - xmin) * 100, height: (ymax - ymin) * 100,
+      };
+    }));
+    return {
+      pageNumber, imageUrl, targetLanguage, sourceLanguage, pageTitle: `Page ${pageNumber}`,
+      summary: 'Japanese manga text detected locally',
+      summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
+      dialogues, provider: 'local-tesseract-gtx', translatedAt: Date.now(),
+      notice: 'Gemini-free OCR is active. Results depend on scan quality and text direction.',
+    };
+  } catch (error: any) {
+    return {
+      pageNumber, imageUrl, targetLanguage, sourceLanguage, pageTitle: `Page ${pageNumber}`,
+      summary: `Page ${pageNumber}`, summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
+      dialogues: [], provider: 'untranslated', errorCode: 'LOCAL_OCR_ERROR',
+      notice: `Local OCR could not read this image: ${String(error?.message || error).slice(0, 120)}`,
+    };
+  }
+}
+
 export async function translateMangaPage(params: {
   imageUrl?: string;
   imageDataBase64?: string;
@@ -255,6 +338,17 @@ export async function translateMangaPage(params: {
     } catch {
       // ignore
     }
+  }
+
+  const localResult = await translateMangaPageWithLocalOcr({
+    imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage,
+  });
+  if (localResult.dialogues.length > 0 || localResult.errorCode === 'OCR_NO_TEXT') {
+    if (localResult.dialogues.length > 0) {
+      pageMemoryCache.set(cacheKey, localResult);
+      try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
+    }
+    return localResult;
   }
 
   try {
