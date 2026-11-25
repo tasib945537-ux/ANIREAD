@@ -61,6 +61,7 @@ import { UpcomingAnimeSection } from './components/UpcomingAnimeSection';
 import { GoogleAITranslator } from './components/GoogleAITranslator';
 import { VoiceSearchButton } from './components/VoiceSearchButton';
 import { PaginationWithJump } from './components/PaginationWithJump';
+import { GeminiApiKeyPage } from './components/GeminiApiKeyPage';
 import { getAnimeDubInfo } from './services/dubCatalog';
 import { getUIText } from './services/translator';
 import {
@@ -122,6 +123,9 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
+      if (path.startsWith('/api-keys') || hash === '#api-keys') {
+        return 'api-keys';
+      }
       if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
         return 'read';
       }
@@ -141,7 +145,9 @@ export default function App() {
     const handleUrlChange = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
+      if (path.startsWith('/api-keys') || hash === '#api-keys') {
+        setActiveTab('api-keys');
+      } else if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
         setActiveTab('read');
       } else if (path === '/directory' || hash === '#directory' || hash.startsWith('#directory/')) {
         setActiveTab('directory');
@@ -176,6 +182,17 @@ export default function App() {
   const [showDubCalendarModal, setShowDubCalendarModal] = useState(false);
   const [hindiRegistryVersion, setHindiRegistryVersion] = useState(0);
   const [isTranslatorOpen, setIsTranslatorOpen] = useState(false);
+
+  // Open API key setup automatically when a translation is requested without a key.
+  useEffect(() => {
+    const openApiKeySetup = () => {
+      setActiveReadingChapter(null);
+      setActiveTab('api-keys');
+      window.history.pushState(null, '', '#api-keys');
+    };
+    window.addEventListener('aniread:request-api-key', openApiKeySetup);
+    return () => window.removeEventListener('aniread:request-api-key', openApiKeySetup);
+  }, []);
 
   // Manga Reading Session Stats Toast Notification
   const [readingSessionToast, setReadingSessionToast] = useState<ReadingSessionStats | null>(null);
@@ -264,7 +281,9 @@ export default function App() {
     const checkRoute = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
-      if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
+      if (path.startsWith('/api-keys') || hash === '#api-keys') {
+        setActiveTab('api-keys');
+      } else if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
         setActiveTab('read');
       } else if (path.startsWith('/manga') || hash.startsWith('#manga')) {
         setActiveTab('manga');
@@ -555,6 +574,12 @@ export default function App() {
             } catch {
               // ignore
             }
+          } else if (tab === 'api-keys') {
+            try {
+              window.history.pushState(null, '', '#api-keys');
+            } catch {
+              // ignore
+            }
           } else if (tab === 'anime') {
             try {
               window.history.pushState(null, '', '#home');
@@ -573,6 +598,8 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 w-full">
+        {activeTab === 'api-keys' && <GeminiApiKeyPage />}
+
         {/* TAB 1: ANIME EXPLORER & TAB 2: MANGA DIRECTORY */}
         {(activeTab === 'anime' || activeTab === 'manga') && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
