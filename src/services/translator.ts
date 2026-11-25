@@ -57,64 +57,42 @@ export async function translateText(
   targetLangCode: string,
   sourceLang: string = 'English'
 ): Promise<string> {
-  if (!text || text.trim() === '') return '';
-  if (targetLangCode === 'en' && sourceLang.toLowerCase() === 'english') {
-    return text;
-  }
-
-  const langObj = SUPPORTED_LANGUAGES.find((l) => l.code === targetLangCode);
-  const targetLangName = langObj ? langObj.name : targetLangCode;
+  if (!text || !text.trim()) return '';
+  if (targetLangCode === 'en' && sourceLang.toLowerCase() === 'english') return text;
 
   const cacheKey = `tr:${sourceLang.toLowerCase()}:${targetLangCode}:${stableTextHash(text)}:${text.length}`;
-  if (memoryCache.has(cacheKey)) {
-    return memoryCache.get(cacheKey)!;
-  }
-
+  const cached = memoryCache.get(cacheKey);
+  if (cached) return cached;
   try {
-    const localSaved = localStorage.getItem(cacheKey);
-    if (localSaved) {
-      memoryCache.set(cacheKey, localSaved);
-      return localSaved;
-    }
-  } catch {
-    // localStorage might be unavailable
-  }
+    const saved = localStorage.getItem(cacheKey);
+    if (saved) { memoryCache.set(cacheKey, saved); return saved; }
+  } catch { /* storage unavailable */ }
+  const pending = inFlightTranslations.get(cacheKey);
+  if (pending) return pending;
 
-  // Deduplicate in-flight promises
-  if (inFlightTranslations.has(cacheKey)) {
-    return inFlightTranslations.get(cacheKey)!;
-  }
-
-  const translationPromise = (async () => {
-    // Keyless Google Translate web endpoint. This is a public endpoint, not a
-    // guaranteed SLA; failures return the original text rather than requiring an API key.
+  const task = (async () => {
     try {
       const src = sourceLang.toLowerCase() === 'auto'
         ? 'auto'
         : (sourceLang.length === 2 ? sourceLang : 'auto');
-      const gtUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${encodeURIComponent(targetLangCode)}&dt=t&q=${encodeURIComponent(text)}`;
-      const response = await fetch(gtUrl, { signal: AbortSignal.timeout(15000) });
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data) && Array.isArray(data[0])) {
-          const translated = data[0].map((chunk: any) => chunk?.[0] || '').join('');
-          if (translated) {
-            memoryCache.set(cacheKey, translated);
-            try { localStorage.setItem(cacheKey, translated); } catch { /* storage quota */ }
-            return translated;
-          }
-        }
-      }
+      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${encodeURIComponent(targetLangCode)}&dt=t&q=${encodeURIComponent(text)}`;
+      const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+      if (!response.ok) return text;
+      const data = await response.json();
+      const translated = Array.isArray(data) && Array.isArray(data[0])
+        ? data[0].map((chunk: any) => chunk?.[0] || '').join('')
+        : '';
+      if (!translated) return text;
+      memoryCache.set(cacheKey, translated);
+      try { localStorage.setItem(cacheKey, translated); } catch { /* storage quota */ }
+      return translated;
     } catch {
-      // Public endpoint unavailable; keep original text and allow retry later.
+      return text;
     }
-    return text;
-  })().finally(() => {
-    inFlightTranslations.delete(cacheKey);
-  });
+  })().finally(() => inFlightTranslations.delete(cacheKey));
 
-  inFlightTranslations.set(cacheKey, translationPromise);
-  return translationPromise;
+  inFlightTranslations.set(cacheKey, task);
+  return task;
 }
 
 export interface MangaPageDialogue {
