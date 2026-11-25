@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 // The key is accepted only in the request header and is never persisted or logged by ANIREAD.
 app.post('/api/gemini-key-check', async (req: Request, res: Response) => {
   const candidateKey = String(req.header('x-gemini-api-key') || '').trim();
-  if (candidateKey.length < 20 || candidateKey.length > 256 || /\\s/.test(candidateKey)) {
+  if (candidateKey.length < 20 || candidateKey.length > 256 || /\s/.test(candidateKey)) {
     return res.status(400).json({ valid: false, message: 'The pasted value is incomplete or contains spaces. Copy the full API key again.' });
   }
 
