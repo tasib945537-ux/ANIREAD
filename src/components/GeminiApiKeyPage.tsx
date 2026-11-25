@@ -121,15 +121,22 @@ export const GeminiApiKeyPage: React.FC<Props> = ({ onBack }) => {
           <li>Paste it in the box above and tap <strong>Save API Key</strong>.</li>
           <li>Open a manga chapter and use <strong>Translate Page</strong> or <strong>Translate Chapter</strong>.</li>
         </ol>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <figure className="rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
-            <img src="/assets/aistudio/Screenshot_20261031-145256_e7d657f1.png" alt="Google AI Studio setup screenshot" className="w-full h-auto object-contain" loading="lazy" />
-            <figcaption className="px-3 py-2 text-xs text-slate-400">Google AI Studio — API key setup reference</figcaption>
-          </figure>
-          <figure className="rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
-            <img src="/assets/aistudio/Screenshot_20261102-000220_344306da.png" alt="Google AI Studio API key reference screenshot" className="w-full h-auto object-contain" loading="lazy" />
-            <figcaption className="px-3 py-2 text-xs text-slate-400">Create or manage your API key</figcaption>
-          </figure>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-slate-700 bg-slate-950 p-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-300 flex items-center justify-center text-lg font-black mb-3">1</div>
+            <p className="font-bold text-white text-sm">Open AI Studio</p>
+            <p className="text-xs text-slate-400 mt-1">Sign in and open the API key page.</p>
+          </div>
+          <div className="rounded-xl border border-slate-700 bg-slate-950 p-4">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/15 text-purple-300 flex items-center justify-center text-lg font-black mb-3">2</div>
+            <p className="font-bold text-white text-sm">Create a key</p>
+            <p className="text-xs text-slate-400 mt-1">Tap Create API key and copy it privately.</p>
+          </div>
+          <div className="rounded-xl border border-slate-700 bg-slate-950 p-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-300 flex items-center justify-center text-lg font-black mb-3">3</div>
+            <p className="font-bold text-white text-sm">Save in ANIREAD</p>
+            <p className="text-xs text-slate-400 mt-1">Paste above, save, then translate a manga page.</p>
+          </div>
         </div>
       </section>
 
