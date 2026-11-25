@@ -47,7 +47,6 @@ import {
 } from '../services/mangaTranslationService';
 import { AnimeLoadingState } from './AnimeLoadingState';
 import { formatChapterDisplayLabel, sortChaptersNumerically } from '../services/chapterFormatter';
-import { getGeminiApiKey } from '../services/geminiApiKey';
 
 export interface ReadingSessionStats {
   seconds: number;
@@ -500,17 +499,10 @@ export const MangaReader: React.FC<Props> = ({
     }
   };
 
-  // --- Manga Translation Handlers --- //
-  const requireGeminiApiKey = () => {
-    if (getGeminiApiKey()) return true;
-    window.dispatchEvent(new CustomEvent('aniread:request-api-key'));
-    return false;
-  };
-
+  // --- Keyless manga translation handlers --- //
 
   // Translate a single manga page with retry tracking, base64 support, and permanent auto-save
   const handleTranslateSinglePage = async (pageNum: number, base64Data?: string) => {
-    if (!requireGeminiApiKey()) return;
     const imgUrl = pages[pageNum - 1] || '';
     if (!imgUrl && !base64Data) return;
 
@@ -613,7 +605,7 @@ export const MangaReader: React.FC<Props> = ({
   // Translate Entire Chapter via Background Translation Manager
   // Supports smart resume (skipping completed pages), auto save, speed tracking, and background persistence
   const handleTranslateEntireChapter = async (forceRetranslate: boolean = false) => {
-    if (pages.length === 0 || !requireGeminiApiKey()) return;
+    if (pages.length === 0) return;
 
     setViewMode('translated');
     setIsTranslatingChapter(true);
