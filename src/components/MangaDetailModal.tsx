@@ -135,6 +135,10 @@ export const MangaDetailModal: React.FC<Props> = ({
         }
 
         setChapters(result.chapters);
+        // Reflect the actual language selected by the English-first fallback.
+        if (result.activeLanguage && result.activeLanguage !== chapterLanguage) {
+          setChapterLanguage(result.activeLanguage);
+        }
         if (result.availableLanguages && result.availableLanguages.length > 0) {
           setAvailableLanguages(result.availableLanguages);
         }
