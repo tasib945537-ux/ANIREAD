@@ -187,6 +187,7 @@ export default function App() {
   useEffect(() => {
     const openApiKeySetup = () => {
       setActiveReadingChapter(null);
+      setIsTranslatorOpen(false);
       setActiveTab('api-keys');
       window.history.pushState(null, '', '#api-keys');
     };
