@@ -12,10 +12,12 @@ export const GeminiApiKeyPage: React.FC<Props> = ({ onBack }) => {
   const [saved, setSaved] = useState(Boolean(getGeminiApiKey()));
   const [message, setMessage] = useState('');
 
-  const handleSave = () => {
-    const value = key.trim();
-    if (!value || !value.startsWith('AIza')) {
-      setMessage('Please enter a valid-looking Google AI Studio API key.');
+  const handleSave = async () => {
+    const value = key.trim().replace(/[\\r\\n\\t]/g, '');
+    // Do not hard-code an API-key prefix. Google can change key formats;
+    // the real validity check is performed against Google's API below.
+    if (value.length < 20 || value.length > 256 || /\\s/.test(value)) {
+      setMessage('This does not look like a complete API key. Copy the full key from Google AI Studio and paste it again.');
       setSaved(false);
       return;
     }
@@ -23,10 +25,20 @@ export const GeminiApiKeyPage: React.FC<Props> = ({ onBack }) => {
       saveGeminiApiKey(value);
       setKey(value);
       setSaved(true);
-      setMessage('API key saved on this device. Manga translation can now use it.');
+      setMessage('Key saved. Verifying with Google AI Studio…');
+      const response = await fetch('/api/gemini-key-check', {
+        method: 'POST',
+        headers: { 'X-Gemini-API-Key': value },
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result.valid === true) {
+        setMessage('Google accepted this API key. You can now translate manga pages.');
+      } else {
+        setMessage(result.message || 'Google could not verify this key. Check the key and its AI Studio project/API access.');
+      }
     } catch {
-      setSaved(false);
-      setMessage('Could not save the key on this device. Check browser storage settings.');
+      setSaved(true);
+      setMessage('Key saved on this device, but verification could not reach ANIREAD. Check your internet connection and try again.');
     }
   };
 
@@ -63,8 +75,8 @@ export const GeminiApiKeyPage: React.FC<Props> = ({ onBack }) => {
         <div className="flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
           <div>
-            <h2 className="font-bold text-white">Your key stays on this device</h2>
-            <p className="text-sm text-slate-400 mt-1">ANIREAD stores this key in this device's browser storage and sends it securely with translation requests. The ANIREAD server does not save it. Do not share your key or add it to GitHub, screenshots, or public posts.</p>
+            <h2 className="font-bold text-white">Your key is stored on this device</h2>
+            <p className="text-sm text-slate-400 mt-1">ANIREAD stores this key in this device's browser storage and sends it over HTTPS with translation requests. The ANIREAD server does not save it. Browser storage is accessible to this device and its browser scripts. Do not share your key or add it to GitHub, screenshots, or public posts.</p>
           </div>
         </div>
 
@@ -87,7 +99,7 @@ export const GeminiApiKeyPage: React.FC<Props> = ({ onBack }) => {
 
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={handleSave} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-500">
-            <Save className="w-4 h-4" /> Save API Key
+            <Save className="w-4 h-4" /> Save & Verify Key
           </button>
           <button type="button" onClick={handleRemove} disabled={!key && !saved} className="inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-sm font-semibold text-rose-300 hover:bg-rose-500/20 disabled:opacity-40">
             <Trash2 className="w-4 h-4" /> Remove
