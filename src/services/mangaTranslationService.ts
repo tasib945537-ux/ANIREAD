@@ -267,6 +267,7 @@ class TranslationQueueManager {
   private listeners = new Set<(job: TranslationJob | null) => void>();
   private startTime = 0;
   private pagesProcessedThisSession = 0;
+  private lastRequestStartedAt = 0;
 
   constructor() {
     this.restoreActiveJob();
@@ -520,36 +521,49 @@ class TranslationQueueManager {
         const isInlineData = imgUrl.startsWith('data:image/');
 
         try {
-          // Translate page via existing server-side Gemini OCR engine
-          const result = await translateMangaPage({
-            imageUrl: isInlineData ? '' : imgUrl,
-            imageDataBase64: isInlineData ? imgUrl : undefined,
-            pageNumber: pageNum,
-            chapterNumber: job.chapterNumber,
-            mangaId: job.mangaId,
-            chapterId: job.chapterId,
-            mangaTitle: job.mangaTitle,
-            targetLanguage: job.targetLanguage,
-            sourceLanguage: job.sourceLanguage,
-            force: true,
-          });
+          // Respect the documented free-tier Vision quota: at most one request every 12 seconds.
+          // This avoids bursts that trigger 429s; a rate-limited page is retried, never silently skipped.
+          let result: TranslatedMangaPageResult;
+          let attempts = 0;
+          do {
+            const waitMs = Math.max(0, 12_000 - (Date.now() - this.lastRequestStartedAt));
+            if (waitMs > 0) {
+              const waitUntil = Date.now() + waitMs;
+              while (Date.now() < waitUntil && !this.shouldStop && this.currentJob) {
+                await new Promise((resolve) => setTimeout(resolve, Math.min(500, waitUntil - Date.now())));
+              }
+            }
+            if (this.shouldStop || !this.currentJob) break;
+
+            this.lastRequestStartedAt = Date.now();
+            result = await translateMangaPage({
+              imageUrl: isInlineData ? '' : imgUrl,
+              imageDataBase64: isInlineData ? imgUrl : undefined,
+              pageNumber: pageNum,
+              chapterNumber: job.chapterNumber,
+              mangaId: job.mangaId,
+              chapterId: job.chapterId,
+              mangaTitle: job.mangaTitle,
+              targetLanguage: job.targetLanguage,
+              sourceLanguage: job.sourceLanguage,
+              force: true,
+            });
+
+            if (!result.rateLimited) break;
+            attempts++;
+            const cooldownSec = Math.max(5, result.retryInSeconds || 15);
+            job.notice = `Gemini quota cooldown: retrying this same page in ${cooldownSec}s (attempt ${attempts}/3).`;
+            this.notify();
+            const waitUntil = Date.now() + cooldownSec * 1000;
+            while (Date.now() < waitUntil && !this.shouldStop && this.currentJob) {
+              job.notice = `AI cooldown: ${Math.ceil((waitUntil - Date.now()) / 1000)}s remaining. Page ${pageNum} will retry automatically.`;
+              this.notify();
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          } while (attempts < 3 && !this.shouldStop && this.currentJob);
 
           if (this.shouldStop || !this.currentJob) break;
-
-          // Handle rate-limit cooldown gracefully
-          if (result.rateLimited) {
-            const cooldownSec = Math.max(5, result.retryInSeconds || 15);
-            job.notice = `Rate-limit cooldown active (${cooldownSec}s). Free tier rate control.`;
-            this.notify();
-
-            for (let c = cooldownSec; c > 0; c--) {
-              if (this.shouldStop || !this.currentJob) break;
-              job.notice = `AI cooldown: ${c}s remaining... (Translation will resume automatically)`;
-              this.notify();
-              await new Promise((r) => setTimeout(r, 1000));
-            }
-            job.notice = undefined;
-          }
+          job.notice = undefined;
 
           // Rule 3: Auto Save immediately after every successful page!
           const hasDialogues = Boolean(result.dialogues && result.dialogues.length > 0 && result.provider !== 'untranslated');
@@ -613,6 +627,9 @@ class TranslationQueueManager {
         job.notice = 'All translated pages saved successfully.';
       } else if (this.shouldStop) {
         if (job.status !== 'stopped') job.status = 'paused';
+      } else if (job.failedPages.length > 0) {
+        job.status = 'failed';
+        job.notice = `${job.failedPages.length} page(s) need retry. Your successful translations are saved; press Resume to retry failed pages.`;
       }
 
       this.notify();
