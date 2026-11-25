@@ -21,7 +21,7 @@ const PORT = rawPort === 8080 || !rawPort ? 3000 : rawPort;
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Gemini-API-Key');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
@@ -290,8 +290,12 @@ app.post('/api/translate', async (req: Request, res: Response) => {
       // MyMemory unavailable, proceed to Gemini
     }
 
-    // 3. Gemini AI Localization fallback with timeout
-    if (aiClient && apiKey && Date.now() >= geminiCooldownUntil) {
+    // 3. Gemini AI Localization fallback with timeout. A device-provided key is request-scoped and never persisted.
+    const requestApiKey = String(req.header('x-gemini-api-key') || '').trim();
+    const requestAiClient = requestApiKey
+      ? new GoogleGenAI({ apiKey: requestApiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } })
+      : aiClient;
+    if (requestAiClient && (requestApiKey || apiKey) && Date.now() >= geminiCooldownUntil) {
       try {
         const prompt = `You are an expert anime, manga, and Japanese localization translator.
 Translate the following anime/manga text from ${sourceLanguage} into ${targetLanguage} (${targetCode}).
@@ -304,7 +308,7 @@ Text to translate:
 ${trimmedText}
 """`;
 
-        const geminiPromise = aiClient.models.generateContent({
+        const geminiPromise = requestAiClient.models.generateContent({
           model: 'gemini-4-hydrogen',
           contents: prompt,
           config: {
@@ -510,15 +514,13 @@ app.post('/api/translate-page', async (req: Request, res: Response) => {
       });
     }
 
-    const activeApiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || apiKey;
-    const activeClient =
-      aiClient ||
-      (activeApiKey
-        ? new GoogleGenAI({
-            apiKey: activeApiKey,
-            httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
-          })
-        : null);
+    // Prefer the user's device-local key for this request; fall back to the server environment key.
+    // Never persist, log, or return the request header.
+    const requestApiKey = String(req.header('x-gemini-api-key') || '').trim();
+    const activeApiKey = requestApiKey || process.env.GEMINI_API_KEY || process.env.API_KEY || '';
+    const activeClient = requestApiKey
+      ? new GoogleGenAI({ apiKey: requestApiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } })
+      : (aiClient || (activeApiKey ? new GoogleGenAI({ apiKey: activeApiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } }) : null));
 
     if (!activeApiKey || !activeClient) {
       return res.json({
@@ -534,7 +536,7 @@ app.post('/api/translate-page', async (req: Request, res: Response) => {
         errorCode: 'MISSING_API_KEY',
         translatedAt: Date.now(),
         notice:
-          'Gemini API key is not configured for server-side Vision OCR. Add GEMINI_API_KEY in Settings > Secrets to translate manga pages.',
+          'Gemini API key is not configured for server-side Vision OCR. Add your key in ANIREAD Settings > Gemini API Key to translate manga pages.',
       });
     }
 
