@@ -13,10 +13,10 @@ export const GeminiApiKeyPage: React.FC<Props> = ({ onBack }) => {
   const [message, setMessage] = useState('');
 
   const handleSave = async () => {
-    const value = key.trim().replace(/[\\r\\n\\t]/g, '');
+    const value = key.trim().replace(/[\r\n\t]/g, '');
     // Do not hard-code an API-key prefix. Google can change key formats;
     // the real validity check is performed against Google's API below.
-    if (value.length < 20 || value.length > 256 || /\\s/.test(value)) {
+    if (value.length < 20 || value.length > 256 || /\s/.test(value)) {
       setMessage('This does not look like a complete API key. Copy the full key from Google AI Studio and paste it again.');
       setSaved(false);
       return;
