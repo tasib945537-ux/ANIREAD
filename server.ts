@@ -25,6 +25,42 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+// Verify a device-supplied Gemini API key directly with Google's model-list endpoint.
+// The key is accepted only in the request header and is never persisted or logged by ANIREAD.
+app.post('/api/gemini-key-check', async (req: Request, res: Response) => {
+  const candidateKey = String(req.header('x-gemini-api-key') || '').trim();
+  if (candidateKey.length < 20 || candidateKey.length > 256 || /\\s/.test(candidateKey)) {
+    return res.status(400).json({ valid: false, message: 'The pasted value is incomplete or contains spaces. Copy the full API key again.' });
+  }
+
+  try {
+    const googleResponse = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1', {
+      method: 'GET',
+      headers: { 'x-goog-api-key': candidateKey, Accept: 'application/json' },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (googleResponse.ok) {
+      return res.json({ valid: true, message: 'Google accepted this API key.' });
+    }
+
+    const googleBody: any = await googleResponse.json().catch(() => ({}));
+    const googleMessage = String(googleBody?.error?.message || '');
+    if (googleResponse.status === 401 || /API_KEY_INVALID|invalid api key/i.test(googleMessage)) {
+      return res.status(401).json({ valid: false, message: 'Google rejected this API key. Check that it was copied completely and has not been deleted or rotated.' });
+    }
+    if (googleResponse.status === 403) {
+      return res.status(403).json({ valid: false, message: 'Google received the key but denied access. Check the Google Cloud project, Gemini API enablement, and API-key restrictions.' });
+    }
+    if (googleResponse.status === 429) {
+      return res.status(429).json({ valid: false, message: 'Google temporarily rate-limited verification. Wait a little and try again.' });
+    }
+    return res.status(502).json({ valid: false, message: 'Google could not verify this key right now. Check the AI Studio project/API settings and try again.' });
+  } catch {
+    return res.status(502).json({ valid: false, message: 'Could not reach Google to verify the key. Check the server connection and try again.' });
+  }
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, app: 'ANIREAD API', timestamp: new Date().toISOString() });
 });
