@@ -355,7 +355,7 @@ ${trimmedText}
         });
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 5000)
+          setTimeout(() => reject(new Error('Gemini text translation timed out')), 20000)
         );
 
         const response: any = await Promise.race([geminiPromise, timeoutPromise]);
