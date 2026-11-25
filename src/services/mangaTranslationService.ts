@@ -523,7 +523,7 @@ class TranslationQueueManager {
         try {
           // Respect the documented free-tier Vision quota: at most one request every 12 seconds.
           // This avoids bursts that trigger 429s; a rate-limited page is retried, never silently skipped.
-          let result: TranslatedMangaPageResult;
+          let result: TranslatedMangaPageResult | null = null;
           let attempts = 0;
           do {
             const waitMs = Math.max(0, 12_000 - (Date.now() - this.lastRequestStartedAt));
@@ -564,6 +564,17 @@ class TranslationQueueManager {
 
           if (this.shouldStop || !this.currentJob) break;
           job.notice = undefined;
+
+          // A stopped retry loop may exit without receiving a response.
+          if (!result) {
+            if (!job.failedPages.includes(pageNum)) job.failedPages.push(pageNum);
+            job.remainingPages = Math.max(0, totalPages - job.completedPages);
+            job.progressPercent = Math.round((job.completedPages / totalPages) * 100);
+            job.updatedAt = Date.now();
+            this.notify();
+            await this.persistCurrentJob();
+            continue;
+          }
 
           // Rule 3: Auto Save immediately after every successful page!
           const hasDialogues = Boolean(result.dialogues && result.dialogues.length > 0 && result.provider !== 'untranslated');
