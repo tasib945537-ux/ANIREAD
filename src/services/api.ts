@@ -1919,47 +1919,34 @@ export async function getMangaChaptersWithInfo(
     );
 
     const requestedLanguage = String(language || 'en').toLowerCase();
-    let fallbackChapterCount = 0;
+    let activeLanguage = requestedLanguage;
     let chosenChapters: any[] = [];
 
+    // Keep the chapter directory in ONE language at a time. English is the default;
+    // if no English scans exist, use Japanese, then the language with the most chapters.
     if (requestedLanguage === 'all') {
       chosenChapters = validScans;
     } else {
-      // Pick the requested language for each chapter when available. If it is missing,
-      // retain one real source-language scan so the reader can translate it to English.
-      const chapterGroups = new Map<string, any[]>();
-      for (const chapter of validScans) {
+      const languageToUse = requestedLanguage === 'en' && (langCounts.en || 0) === 0
+        ? ((langCounts.ja || 0) > 0 ? 'ja' : Object.entries(langCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'en')
+        : requestedLanguage;
+      activeLanguage = languageToUse;
+      chosenChapters = validScans.filter((chapter: any) =>
+        String(chapter.attributes?.translatedLanguage || '').toLowerCase() === languageToUse
+      );
+
+      // If duplicate scans exist for one chapter in this language, keep the fullest scan.
+      const bestByChapter = new Map<string, any>();
+      for (const chapter of chosenChapters) {
         const attrs = chapter.attributes || {};
         const key = `${String(attrs.volume ?? '')}:${String(attrs.chapter ?? 'Oneshot')}`;
-        if (!chapterGroups.has(key)) chapterGroups.set(key, []);
-        chapterGroups.get(key)!.push(chapter);
-      }
-
-      for (const group of chapterGroups.values()) {
-        const requested = group.filter((chapter: any) =>
-          String(chapter.attributes?.translatedLanguage || '').toLowerCase() === requestedLanguage
-        );
-        if (requested.length > 0) {
-          requested.sort((a: any, b: any) => Number(b.attributes?.pages || 0) - Number(a.attributes?.pages || 0));
-          chosenChapters.push(requested[0]);
-          continue;
-        }
-
-        const fallbacks = [...group].sort((a: any, b: any) => {
-          const langA = String(a.attributes?.translatedLanguage || '').toLowerCase();
-          const langB = String(b.attributes?.translatedLanguage || '').toLowerCase();
-          if (langA === 'ja' && langB !== 'ja') return -1;
-          if (langB === 'ja' && langA !== 'ja') return 1;
-          const countDiff = (langCounts[langB] || 0) - (langCounts[langA] || 0);
-          return countDiff || Number(b.attributes?.pages || 0) - Number(a.attributes?.pages || 0);
-        });
-        if (fallbacks[0]) {
-          chosenChapters.push(fallbacks[0]);
-          fallbackChapterCount++;
+        const previous = bestByChapter.get(key);
+        if (!previous || Number(attrs.pages || 0) > Number(previous.attributes?.pages || 0)) {
+          bestByChapter.set(key, chapter);
         }
       }
+      chosenChapters = Array.from(bestByChapter.values());
     }
-
     // Keep each selected chapter's actual source language so the reader translator can use it.
     const chapterMap = new Map<string, any>();
     for (const chapter of chosenChapters) {
@@ -1999,21 +1986,23 @@ export async function getMangaChaptersWithInfo(
       })
     );
     const availableLanguages: { code: string; name: string; count: number }[] = [
-      { code: 'all', name: 'All Translations', count: allScanChapterKeys.size },
       ...Object.entries(langCounts)
-        .map(([code, count]) => ({
-          code,
-          name: LANGUAGE_NAMES[code] || code.toUpperCase(),
-          count,
-        }))
-        .sort((a, b) => b.count - a.count),
+        .map(([code, count]) => ({ code, name: LANGUAGE_NAMES[code] || code.toUpperCase(), count }))
+        .sort((a, b) => {
+          if (a.code === 'en') return -1;
+          if (b.code === 'en') return 1;
+          if (a.code === 'ja') return -1;
+          if (b.code === 'ja') return 1;
+          return b.count - a.count;
+        }),
+      { code: 'all', name: 'All Translations', count: allScanChapterKeys.size },
     ];
 
-    const selectedLanguageName = LANGUAGE_NAMES[requestedLanguage] || requestedLanguage.toUpperCase();
+    const selectedLanguageName = LANGUAGE_NAMES[activeLanguage] || activeLanguage.toUpperCase();
     const baseNotice = mappedChapters.length === 0
-      ? 'No readable chapters are currently listed for this manga.'
-      : fallbackChapterCount > 0
-        ? `${fallbackChapterCount} chapters have no ${selectedLanguageName} scan. Available source-language scans are included; use the reader translator to convert them into ${selectedLanguageName}.`
+      ? `No readable ${selectedLanguageName} chapters are currently listed for this manga.`
+      : requestedLanguage === 'en' && activeLanguage !== 'en'
+        ? `No English scans are listed. Showing ${selectedLanguageName} chapters instead; you can translate pages in the reader.`
         : undefined;
     const notice = feedTruncated
       ? [baseNotice, 'MangaDex returned more than 10,000 chapter records; showing the first 10,000 available records.']
@@ -2023,7 +2012,7 @@ export async function getMangaChaptersWithInfo(
     return {
       chapters: mappedChapters,
       availableLanguages,
-      activeLanguage: requestedLanguage,
+      activeLanguage,
       notice,
       mangaDexId: targetMangaDexId,
     };
