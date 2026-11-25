@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { KeyRound, ExternalLink, Eye, EyeOff, Save, Trash2, ShieldCheck, AlertTriangle, CheckCircle2, Copy } from 'lucide-react';
 import { clearGeminiApiKey, getGeminiApiKey, saveGeminiApiKey } from '../services/geminiApiKey';
+import { apiUrl } from '../services/apiUrl';
 
 interface Props {
   onBack?: () => void;
@@ -26,7 +27,7 @@ export const GeminiApiKeyPage: React.FC<Props> = ({ onBack }) => {
       setKey(value);
       setSaved(true);
       setMessage('Key saved. Verifying with Google AI Studio…');
-      const response = await fetch('/api/gemini-key-check', {
+      const response = await fetch(apiUrl('/api/gemini-key-check'), {
         method: 'POST',
         headers: { 'X-Gemini-API-Key': value },
       });
