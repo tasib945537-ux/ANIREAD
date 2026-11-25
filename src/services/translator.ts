@@ -1,5 +1,4 @@
 import { TranslationTarget } from '../types/anime';
-import { getGeminiApiKey } from './geminiApiKey';
 import { apiUrl } from './apiUrl';
 
 export const SUPPORTED_LANGUAGES: TranslationTarget[] = [
@@ -340,16 +339,15 @@ export async function translateMangaPage(params: {
     }
   }
 
+  // Manga image translation is intentionally Gemini-independent.
   const localResult = await translateMangaPageWithLocalOcr({
     imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage,
   });
-  if (localResult.dialogues.length > 0 || localResult.errorCode === 'OCR_NO_TEXT') {
-    if (localResult.dialogues.length > 0) {
-      pageMemoryCache.set(cacheKey, localResult);
-      try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
-    }
-    return localResult;
+  if (localResult.dialogues.length > 0) {
+    pageMemoryCache.set(cacheKey, localResult);
+    try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
   }
+  return localResult;
 
   try {
     const controller = new AbortController();
