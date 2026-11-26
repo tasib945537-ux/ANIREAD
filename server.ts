@@ -67,13 +67,28 @@ app.get('/api/manga-image', async (req: Request, res: Response) => {
     const rawUrl = String(req.query.url || '');
     if (!rawUrl || rawUrl.length > 2048) return res.status(400).json({ error: 'A valid image URL is required.' });
     const imageUrl = new URL(rawUrl);
-    const allowedHosts = new Set(['uploads.mangadex.org', 'mangadex.org']);
-    if (imageUrl.protocol !== 'https:' || !allowedHosts.has(imageUrl.hostname) || !/^\/(data|data-saver)\//.test(imageUrl.pathname)) {
-      return res.status(400).json({ error: 'Only MangaDex image URLs are supported.' });
+    const host = imageUrl.hostname.toLowerCase();
+    const isMangaDexHost =
+      host === 'uploads.mangadex.org' ||
+      host === 'mangadex.org' ||
+      host.endsWith('.mangadex.org') ||
+      host === 'mangadex.network' ||
+      host.endsWith('.mangadex.network');
+    // MangaDex@Home can return a regional node rather than uploads.mangadex.org.
+    // Restrict the proxy to HTTPS MangaDex-owned hosts and chapter image paths.
+    if (
+      imageUrl.protocol !== 'https:' ||
+      imageUrl.username ||
+      imageUrl.password ||
+      imageUrl.port ||
+      !isMangaDexHost ||
+      !/^\/(data|data-saver)\/[a-f0-9]+\//i.test(imageUrl.pathname)
+    ) {
+      return res.status(400).json({ error: 'Only official MangaDex chapter image URLs are supported.' });
     }
     const upstream = await fetch(imageUrl.toString(), {
       headers: { 'User-Agent': 'AniRead/1.0', Referer: 'https://mangadex.org/' },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(20000),
     });
     if (!upstream.ok) return res.status(upstream.status).json({ error: 'Manga image could not be fetched.' });
     const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
