@@ -19,6 +19,15 @@ window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     : nativeFetch(targetUrl, init);
 }) as typeof window.fetch;
 
+// Register the app-shell service worker so the website can be installed as a PWA.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch((error) => {
+      console.warn('ANIREAD service worker registration failed:', error);
+    });
+  });
+}
+
 createRoot(document.getElementById('root')!).render(
   <ErrorBoundary>
     <FirebaseProvider>
