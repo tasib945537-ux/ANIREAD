@@ -280,140 +280,80 @@ let geminiCooldownUntil = 0;
 // Multi-language translation endpoint
 app.post('/api/translate', async (req: Request, res: Response) => {
   try {
-    const { text, targetLanguage, sourceLanguage = 'Auto' } = req.body;
-
-    if (!text || typeof text !== 'string') {
-      return res.status(400).json({ error: 'Text is required for translation' });
-    }
-
-    if (!targetLanguage || typeof targetLanguage !== 'string') {
-      return res.status(400).json({ error: 'Target language is required' });
-    }
-
-    const trimmedText = text.trim();
-    if (!trimmedText) {
-      return res.json({ translatedText: '' });
-    }
+    const { text, targetLanguage, sourceLanguage = 'Auto' } = req.body || {};
+    if (typeof text !== 'string') return res.status(400).json({ error: 'Text is required.' });
+    if (typeof targetLanguage !== 'string' || !targetLanguage.trim()) return res.status(400).json({ error: 'Target language is required.' });
+    const input = text.trim();
+    if (!input) return res.json({ translatedText: '', provider: 'empty' });
+    if (input.length > 20000) return res.status(413).json({ error: 'Text is too long. Translate a smaller passage.' });
 
     const targetCode = resolveLangCode(targetLanguage);
-    const sourceCode = sourceLanguage.toLowerCase() === 'auto' ? 'auto' : resolveLangCode(sourceLanguage);
-
+    const sourceRaw = String(sourceLanguage || 'Auto').trim();
+    const sourceCode = sourceRaw.toLowerCase() === 'auto' ? 'auto' : resolveLangCode(sourceRaw);
     if (targetCode === sourceCode && targetCode !== 'auto') {
-      return res.json({ translatedText: trimmedText, cached: true });
+      return res.json({ translatedText: input, cached: true, provider: 'same-language' });
     }
 
-    const cacheKey = `${sourceCode}:${targetCode}:${trimmedText}`;
-    if (translationCache.has(cacheKey)) {
-      return res.json({ translatedText: translationCache.get(cacheKey), cached: true, provider: 'cache' });
-    }
+    const cacheKey = `${sourceCode}:${targetCode}:${input}`;
+    const cached = translationCache.get(cacheKey);
+    if (cached) return res.json({ translatedText: cached, cached: true, provider: 'cache' });
 
-    // High Performance Instant Translator:
-    // 1. Google Translate GTX engine: sub-50ms latency, supports up to 4000 chars, no rate limits
-    try {
-      const gtUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(
-        sourceCode
-      )}&tl=${encodeURIComponent(targetCode)}&dt=t&q=${encodeURIComponent(trimmedText)}`;
+    const chunks: string[] = [];
+    for (let offset = 0; offset < input.length; offset += 2800) chunks.push(input.slice(offset, offset + 2800));
+    const translatedChunks: string[] = [];
+    let provider = 'google-gtx';
 
-      const gtRes = await fetch(gtUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        },
-        signal: AbortSignal.timeout(3500),
-      });
-
-      if (gtRes.ok) {
-        const gtData = await gtRes.json();
-        if (Array.isArray(gtData) && Array.isArray(gtData[0])) {
-          const translatedParts = gtData[0].map((chunk: any) => (chunk && chunk[0] ? chunk[0] : '')).join('');
-          if (translatedParts) {
-            translationCache.set(cacheKey, translatedParts);
-            return res.json({ translatedText: translatedParts, cached: false, provider: 'fast-google-translate' });
+    for (const chunk of chunks) {
+      let translated = '';
+      const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sourceCode)}&tl=${encodeURIComponent(targetCode)}&dt=t&q=${encodeURIComponent(chunk)}`;
+      try {
+        const response = await fetch(googleUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; AniRead/1.0)' },
+          signal: AbortSignal.timeout(8000),
+        });
+        if (response.ok) {
+          const data: any = await response.json();
+          if (Array.isArray(data) && Array.isArray(data[0])) {
+            translated = data[0].map((part: any) => String(part?.[0] || '')).join('').trim();
           }
         }
+      } catch { /* Try fallback. */ }
+
+      if (!translated || translated === chunk.trim()) {
+        if (chunk.length > 480) {
+          return res.status(503).json({ error: 'Primary translation provider is unavailable for this long passage. Please retry.', code: 'TRANSLATION_UNAVAILABLE', retryable: true });
+        }
+        const mmSource = sourceCode === 'auto' ? 'ja' : sourceCode;
+        const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=${encodeURIComponent(mmSource)}|${encodeURIComponent(targetCode)}`;
+        try {
+          const response = await fetch(mmUrl, {
+            headers: { 'User-Agent': 'AniRead/1.0' },
+            signal: AbortSignal.timeout(8000),
+          });
+          if (response.ok) {
+            const data: any = await response.json();
+            const candidate = String(data?.responseData?.translatedText || '').trim();
+            if (candidate && !candidate.startsWith('MYMEMORY WARNING') && candidate !== chunk.trim()) {
+              translated = candidate;
+              provider = 'google-gtx+mymemory';
+            }
+          }
+        } catch { /* Return a retryable error below. */ }
       }
-    } catch {
-      // Fast translate unavailable, proceed to backup
+
+      if (!translated || translated === chunk.trim()) {
+        return res.status(503).json({ error: 'Translation providers are temporarily unavailable.', code: 'TRANSLATION_UNAVAILABLE', retryable: true });
+      }
+      translatedChunks.push(translated);
     }
 
-    // 2. High-reliability MyMemory API fallback (free, fast, no API key needed)
-    try {
-      const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmedText.slice(0, 500))}&langpair=${encodeURIComponent(sourceCode === 'auto' ? 'en' : sourceCode)}|${encodeURIComponent(targetCode)}`;
-      const mmRes = await fetch(mmUrl, {
-        headers: { 'User-Agent': 'AniRead/1.0' },
-        signal: AbortSignal.timeout(3000),
-      });
-      if (mmRes.ok) {
-        const mmData = await mmRes.json();
-        const mmText = mmData?.responseData?.translatedText;
-        if (mmText && !mmText.startsWith('MYMEMORY WARNING')) {
-          translationCache.set(cacheKey, mmText);
-          return res.json({ translatedText: mmText, cached: false, provider: 'mymemory' });
-        }
-      }
-    } catch {
-      // MyMemory unavailable, proceed to Gemini
-    }
-
-    // 3. Gemini AI Localization fallback with timeout. A device-provided key is request-scoped and never persisted.
-    const requestApiKey = String(req.header('x-gemini-api-key') || '').trim();
-    const requestAiClient = requestApiKey
-      ? new GoogleGenAI({ apiKey: requestApiKey, httpOptions: { headers: { 'User-Agent': 'aistudio-build' } } })
-      : aiClient;
-    if (requestAiClient && (requestApiKey || apiKey) && Date.now() >= geminiCooldownUntil) {
-      try {
-        const prompt = `You are an expert anime, manga, and Japanese localization translator.
-Translate the following anime/manga text from ${sourceLanguage} into ${targetLanguage} (${targetCode}).
-Provide a natural, expressive, culturally authentic translation.
-Keep Japanese character names, honorifics (e.g. -san, -kun, -sensei), and iconic anime terms authentic.
-Do not add conversational commentary or quotes. Output ONLY the translated text.
-
-Text to translate:
-"""
-${trimmedText}
-"""`;
-
-        const geminiPromise = requestAiClient.models.generateContent({
-          model: 'gemini-4-hydrogen',
-          contents: prompt,
-          config: {
-            thinkingConfig: {
-              thinkingLevel: ThinkingLevel.LOW,
-            },
-          },
-        });
-
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Gemini text translation timed out')), 20000)
-        );
-
-        const response: any = await Promise.race([geminiPromise, timeoutPromise]);
-        const translated = response.text ? response.text.trim() : '';
-        if (translated && translated.length > 0 && !translated.startsWith('Error')) {
-          translationCache.set(cacheKey, translated);
-          return res.json({ translatedText: translated, cached: false, provider: 'gemini' });
-        }
-      } catch (geminiError: any) {
-        const msg = geminiError?.message || '';
-        if (geminiError?.status === 'RESOURCE_EXHAUSTED' || msg.includes('429') || msg.includes('Quota exceeded')) {
-          const match = msg.match(/retry in ([0-9.]+)s/i);
-          const retrySec = match ? Math.ceil(parseFloat(match[1])) : 45;
-          geminiCooldownUntil = Date.now() + retrySec * 1000;
-        }
-      }
-    }
-
-    // If all providers exhausted, return original text safely
-    return res.json({
-      translatedText: trimmedText,
-      notice: 'Translation services could not be reached. Returning original text.',
-    });
+    const translatedText = translatedChunks.join('');
+    if (translationCache.size > 5000) translationCache.clear();
+    translationCache.set(cacheKey, translatedText);
+    return res.json({ translatedText, cached: false, provider });
   } catch (error: any) {
-    console.error('Translation endpoint error:', error);
-    return res.status(500).json({
-      error: 'Translation failed',
-      fallbackText: req.body?.text || '',
-      message: error?.message || 'Internal server error',
-    });
+    console.error('Translation endpoint error:', error?.message || error);
+    return res.status(503).json({ error: error?.message || 'Translation service is temporarily unavailable.', code: 'TRANSLATION_UNAVAILABLE', retryable: true });
   }
 });
 
