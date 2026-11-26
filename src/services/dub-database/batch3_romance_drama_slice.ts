@@ -1,6 +1,58 @@
 import { NormalizedAnimeDubRecord } from './dubTypes';
 
 export const BATCH3_ROMANCE_DRAMA_SLICE: NormalizedAnimeDubRecord[] = [
+  // DARLING in the FRANXX — official Hindi audio listed by Crunchyroll.
+  {
+    animeId: 'darling_in_the_franxx',
+    title: 'DARLING in the FRANXX',
+    englishTitle: 'DARLING in the FRANXX',
+    nativeTitle: 'ダーリン・イン・ザ・フランキス',
+    keywords: ['darling in the franxx', 'darling in the franxx', 'darlinginthefranxx', 'ditf', 'darlifra'],
+    seasons: [
+      {
+        seasonNumber: 1,
+        seasonTitle: 'Season 1',
+        episodeCount: 24,
+        languages: [
+          {
+            language: 'Japanese',
+            audioType: 'original',
+            status: 'CONFIRMED',
+            dubbedEpisodes: '24/24',
+            totalEpisodes: 24,
+            platform: ['Crunchyroll'],
+            region: 'Global',
+            sourceUrls: ['https://www.crunchyroll.com/series/GY8VEQ95Y/darling-in-the-franxx'],
+            lastVerified: 'November 2026',
+          },
+          {
+            language: 'English',
+            audioType: 'dub',
+            status: 'CONFIRMED',
+            dubbedEpisodes: '24/24',
+            totalEpisodes: 24,
+            platform: ['Crunchyroll'],
+            region: 'Global',
+            sourceUrls: ['https://www.crunchyroll.com/series/GY8VEQ95Y/darling-in-the-franxx'],
+            lastVerified: 'November 2026',
+          },
+          {
+            language: 'Hindi',
+            audioType: 'dub',
+            status: 'CONFIRMED',
+            dubbedEpisodes: '24/24',
+            totalEpisodes: 24,
+            platform: ['Crunchyroll India'],
+            region: 'India',
+            sourceUrls: ['https://www.crunchyroll.com/hi/series/GY8VEQ95Y/darling-in-the-franxx'],
+            lastVerified: 'November 2026',
+            notes: 'Crunchyroll title page lists Hindi audio; regional availability can vary.',
+          },
+        ],
+      },
+    ],
+  },
+
   // 1. Spy x Family
   {
     animeId: 'spy_x_family',
