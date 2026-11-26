@@ -207,7 +207,7 @@ function getLocalizedPageLabel(pageNumber: number, targetLanguage: string): stri
   return `Page ${pageNumber}`;
 }
 
-let localJapaneseOcrWorker: Promise<any> | null = null;
+const localOcrWorkers = new Map<string, Promise<any>>();
 
 function withOcrTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -219,20 +219,37 @@ function withOcrTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string
   });
 }
 
-async function getLocalJapaneseOcrWorker() {
-  if (!localJapaneseOcrWorker) {
+function getOcrLanguage(sourceLanguage: string): { primary: string; fallback?: string; vertical: boolean } {
+  const source = String(sourceLanguage || 'Auto').toLowerCase();
+  if (source === 'ja' || source.includes('japanese') || source === 'auto') {
+    return { primary: 'jpn_vert', fallback: 'jpn', vertical: true };
+  }
+  if (source === 'en' || source.includes('english')) return { primary: 'eng', vertical: false };
+  if (source === 'ko' || source.includes('korean')) return { primary: 'kor', vertical: false };
+  if (source === 'zh' || source.includes('chinese')) return { primary: 'chi_sim', vertical: false };
+  if (source === 'ru' || source.includes('russian')) return { primary: 'rus', vertical: false };
+  return { primary: 'eng', vertical: false };
+}
+
+async function getLocalOcrWorker(language: string) {
+  if (!localOcrWorkers.has(language)) {
     const creatingWorker = import('tesseract.js').then(({ createWorker }) =>
-      createWorker('jpn_vert', 1, { logger: () => undefined })
+      createWorker(language, 1, { logger: () => undefined })
     );
-    localJapaneseOcrWorker = withOcrTimeout(creatingWorker, 60000, 'Japanese OCR model initialization')
+    const workerPromise = withOcrTimeout(creatingWorker, 90000, `${language} OCR model initialization`)
       .catch((error) => {
-        // If the model finishes loading after the timeout, release its worker instead of leaking it.
         creatingWorker.then((worker) => worker.terminate()).catch(() => undefined);
-        localJapaneseOcrWorker = null;
+        localOcrWorkers.delete(language);
         throw error;
       });
+    localOcrWorkers.set(language, workerPromise);
   }
-  return localJapaneseOcrWorker;
+  return localOcrWorkers.get(language)!;
+}
+
+async function discardOcrWorker(language: string, worker: any) {
+  try { await worker.terminate(); } catch { /* worker may already be terminated */ }
+  localOcrWorkers.delete(language);
 }
 
 async function prepareOcrImage(image: Blob): Promise<Blob> {
@@ -274,10 +291,15 @@ async function translateMangaPageWithLocalOcr(params: {
       let response: Response | null = null;
       try {
         const parsedUrl = new URL(imageUrl);
-        if (parsedUrl.hostname === 'uploads.mangadex.org' || parsedUrl.hostname === 'mangadex.org') {
+        const host = parsedUrl.hostname.toLowerCase();
+        const isMangaDexHost = host === 'uploads.mangadex.org' ||
+          host === 'mangadex.org' || host.endsWith('.mangadex.org') ||
+          host === 'mangadex.network' || host.endsWith('.mangadex.network');
+        if (parsedUrl.protocol === 'https:' && isMangaDexHost) {
           const proxyUrl = translationEndpoint(`/api/manga-image?url=${encodeURIComponent(imageUrl)}`);
-          const proxyResponse = await fetchWithTimeout(proxyUrl, {}, 15000);
+          const proxyResponse = await fetchWithTimeout(proxyUrl, {}, 20000);
           if (proxyResponse.ok) response = proxyResponse;
+          else throw new Error(`MangaDex image proxy returned ${proxyResponse.status}`);
         }
       } catch { /* Use direct image fetch below if URL parsing or proxy is unavailable. */ }
       if (!response) {
@@ -287,30 +309,27 @@ async function translateMangaPageWithLocalOcr(params: {
       image = await response.blob();
     }
     image = await prepareOcrImage(image);
-    let worker = await getLocalJapaneseOcrWorker();
+    const ocrLanguage = getOcrLanguage(sourceLanguage);
+    let activeLanguage = ocrLanguage.primary;
+    let worker = await getLocalOcrWorker(activeLanguage);
     let recognition: any;
     try {
-      recognition = await withOcrTimeout(worker.recognize(image), 45000, 'Page OCR');
+      recognition = await withOcrTimeout(worker.recognize(image), 60000, 'Page OCR');
     } catch (error) {
-      await worker.terminate().catch(() => undefined);
-      localJapaneseOcrWorker = null;
+      await discardOcrWorker(activeLanguage, worker);
       throw error;
     }
     let lines = (recognition.data.lines || []).filter((line: any) =>
       String(line.text || '').trim() && Number(line.confidence || 0) >= 20
     );
-    if (!lines.length) {
-      await worker.terminate();
-      localJapaneseOcrWorker = null;
-      const { createWorker } = await import('tesseract.js');
-      const fallbackCreation = createWorker('jpn', 1, { logger: () => undefined });
-      worker = await withOcrTimeout(fallbackCreation, 60000, 'Japanese OCR fallback initialization');
-      localJapaneseOcrWorker = Promise.resolve(worker);
+    if (!lines.length && ocrLanguage.fallback) {
+      await discardOcrWorker(activeLanguage, worker);
+      activeLanguage = ocrLanguage.fallback;
+      worker = await getLocalOcrWorker(activeLanguage);
       try {
-        recognition = await withOcrTimeout(worker.recognize(image), 45000, 'Fallback page OCR');
+        recognition = await withOcrTimeout(worker.recognize(image), 60000, 'Fallback page OCR');
       } catch (error) {
-        await worker.terminate().catch(() => undefined);
-        localJapaneseOcrWorker = null;
+        await discardOcrWorker(activeLanguage, worker);
         throw error;
       }
       lines = (recognition.data.lines || []).filter((line: any) =>
@@ -346,7 +365,7 @@ async function translateMangaPageWithLocalOcr(params: {
       summary: 'Japanese manga text detected locally',
       summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
       dialogues, provider: 'local-tesseract-gtx',
-      notice: 'Gemini-free OCR is active. Results depend on scan quality and text direction.',
+      notice: `Gemini-free ${activeLanguage} OCR is active. Results depend on scan quality and text direction.`,
     };
   } catch (error: any) {
     return {
