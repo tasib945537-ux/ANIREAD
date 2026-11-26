@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aniread-v3';
+const CACHE_NAME = 'aniread-v4';
 const STATIC_ASSETS = [
   '/',
   '/icon.svg',
