@@ -267,7 +267,6 @@ class TranslationQueueManager {
   private listeners = new Set<(job: TranslationJob | null) => void>();
   private startTime = 0;
   private pagesProcessedThisSession = 0;
-  private lastRequestStartedAt = 0;
 
   constructor() {
     this.restoreActiveJob();
@@ -521,21 +520,13 @@ class TranslationQueueManager {
         const isInlineData = imgUrl.startsWith('data:image/');
 
         try {
-          // Respect the documented free-tier Vision quota: at most one request every 12 seconds.
-          // This avoids bursts that trigger 429s; a rate-limited page is retried, never silently skipped.
+          // Gemini-free local OCR + keyless text translation: do not apply the old
+          // Gemini Vision 12-second quota delay to this client-side pipeline.
           let result: TranslatedMangaPageResult | null = null;
           let attempts = 0;
           do {
-            const waitMs = Math.max(0, 12_000 - (Date.now() - this.lastRequestStartedAt));
-            if (waitMs > 0) {
-              const waitUntil = Date.now() + waitMs;
-              while (Date.now() < waitUntil && !this.shouldStop && this.currentJob) {
-                await new Promise((resolve) => setTimeout(resolve, Math.min(500, waitUntil - Date.now())));
-              }
-            }
             if (this.shouldStop || !this.currentJob) break;
 
-            this.lastRequestStartedAt = Date.now();
             result = await translateMangaPage({
               imageUrl: isInlineData ? '' : imgUrl,
               imageDataBase64: isInlineData ? imgUrl : undefined,
@@ -552,11 +543,11 @@ class TranslationQueueManager {
             if (!result.rateLimited) break;
             attempts++;
             const cooldownSec = Math.max(5, result.retryInSeconds || 15);
-            job.notice = `Gemini quota cooldown: retrying this same page in ${cooldownSec}s (attempt ${attempts}/3).`;
+            job.notice = `Translation service cooldown: retrying this same page in ${cooldownSec}s (attempt ${attempts}/3).`;
             this.notify();
             const waitUntil = Date.now() + cooldownSec * 1000;
             while (Date.now() < waitUntil && !this.shouldStop && this.currentJob) {
-              job.notice = `AI cooldown: ${Math.ceil((waitUntil - Date.now()) / 1000)}s remaining. Page ${pageNum} will retry automatically.`;
+              job.notice = `Translation cooldown: ${Math.ceil((waitUntil - Date.now()) / 1000)}s remaining. Page ${pageNum} will retry automatically.`;
               this.notify();
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
