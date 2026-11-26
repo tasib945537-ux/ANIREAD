@@ -39,7 +39,11 @@ export const SUPPORTED_LANGUAGES: TranslationTarget[] = [
 
 const memoryCache = new Map<string, string>();
 const inFlightTranslations = new Map<string, Promise<string>>();
-const TRANSLATION_API_BASE = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+// Production frontend and API are deployed separately; allow deployment override.
+const TRANSLATION_API_BASE = String(
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? 'https://aniread-api.onrender.com' : '')
+).replace(/\/$/, '');
 
 function stableTextHash(value: string): string {
   let hash = 2166136261;
