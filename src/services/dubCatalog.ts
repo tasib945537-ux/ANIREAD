@@ -438,6 +438,17 @@ export const VERIFIED_OFFICIAL_CATALOG: VerifiedDubRecord[] = [
         watchUrl: 'https://www.crunchyroll.com/series/GRZXQ014Y/darling-in-the-franxx',
       },
       {
+        language: 'Hindi',
+        status: 'Available',
+        platform: ['Crunchyroll India'],
+        verificationSource: 'Crunchyroll official title audio listing',
+        releaseDate: 'Official Hindi audio listed',
+        episodesDubbed: 'Complete Series (24/24 Episodes)',
+        studios: ['Crunchyroll India'],
+        notes: 'Official title page lists Hindi audio. Availability may vary by country.',
+        watchUrl: 'https://www.crunchyroll.com/hi/series/GY8VEQ95Y/darling-in-the-franxx',
+      },
+      {
         language: 'Spanish',
         status: 'Available',
         platform: ['Crunchyroll'],
