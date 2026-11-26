@@ -61,6 +61,34 @@ app.post('/api/gemini-key-check', async (req: Request, res: Response) => {
   }
 });
 
+// CORS-safe MangaDex image proxy for browser OCR. Only trusted MangaDex image hosts are allowed.
+app.get('/api/manga-image', async (req: Request, res: Response) => {
+  try {
+    const rawUrl = String(req.query.url || '');
+    if (!rawUrl || rawUrl.length > 2048) return res.status(400).json({ error: 'A valid image URL is required.' });
+    const imageUrl = new URL(rawUrl);
+    const allowedHosts = new Set(['uploads.mangadex.org', 'mangadex.org']);
+    if (imageUrl.protocol !== 'https:' || !allowedHosts.has(imageUrl.hostname) || !/^\/(data|data-saver)\//.test(imageUrl.pathname)) {
+      return res.status(400).json({ error: 'Only MangaDex image URLs are supported.' });
+    }
+    const upstream = await fetch(imageUrl.toString(), {
+      headers: { 'User-Agent': 'AniRead/1.0', Referer: 'https://mangadex.org/' },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!upstream.ok) return res.status(upstream.status).json({ error: 'Manga image could not be fetched.' });
+    const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
+    if (!contentType.toLowerCase().startsWith('image/')) return res.status(415).json({ error: 'The source did not return an image.' });
+    const bytes = Buffer.from(await upstream.arrayBuffer());
+    if (!bytes.length || bytes.length > 12 * 1024 * 1024) return res.status(413).json({ error: 'Image is empty or too large.' });
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return res.send(bytes);
+  } catch (error: any) {
+    return res.status(502).json({ error: 'Manga image proxy failed.', message: String(error?.message || error).slice(0, 160) });
+  }
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, app: 'ANIREAD API', timestamp: new Date().toISOString() });
 });
