@@ -225,7 +225,18 @@ async function translateMangaPageWithLocalOcr(params: {
       const response = await fetch(imageDataBase64.startsWith('data:') ? imageDataBase64 : `data:image/jpeg;base64,${imageDataBase64}`);
       image = await response.blob();
     } else {
-      const response = await fetch(imageUrl, { mode: 'cors', credentials: 'omit' });
+      let response: Response | null = null;
+      try {
+        const parsedUrl = new URL(imageUrl);
+        if (parsedUrl.hostname === 'uploads.mangadex.org' || parsedUrl.hostname === 'mangadex.org') {
+          const proxyUrl = translationEndpoint(`/api/manga-image?url=${encodeURIComponent(imageUrl)}`);
+          const proxyResponse = await fetchWithTimeout(proxyUrl, {}, 15000);
+          if (proxyResponse.ok) response = proxyResponse;
+        }
+      } catch { /* Use direct image fetch below if URL parsing or proxy is unavailable. */ }
+      if (!response) {
+        response = await fetchWithTimeout(imageUrl, { mode: 'cors', credentials: 'omit' }, 15000);
+      }
       if (!response.ok) throw new Error(`Image request failed (${response.status})`);
       image = await response.blob();
     }
