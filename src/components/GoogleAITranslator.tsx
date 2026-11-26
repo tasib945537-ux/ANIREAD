@@ -93,6 +93,7 @@ export const GoogleAITranslator: React.FC<GoogleAITranslatorProps> = ({
   const [langSearch, setLangSearch] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [detectedLangName, setDetectedLangName] = useState<string | null>(null);
+  const [translationError, setTranslationError] = useState<string | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -128,6 +129,7 @@ export const GoogleAITranslator: React.FC<GoogleAITranslatorProps> = ({
   const handlePerformTranslation = async () => {
     if (!inputText || inputText.trim() === '') return;
     setIsTranslating(true);
+    setTranslationError(null);
     try {
       const sourceArg = sourceLang === 'auto' ? 'Auto' : sourceLang;
       const res = await translateText(inputText, targetLang, sourceArg);
@@ -148,6 +150,9 @@ export const GoogleAITranslator: React.FC<GoogleAITranslatorProps> = ({
         }
       }
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Translation failed. Please retry.';
+      setTranslationError(message);
+      setTranslatedText('');
       console.error('Translation error:', err);
     } finally {
       setIsTranslating(false);
@@ -454,6 +459,11 @@ export const GoogleAITranslator: React.FC<GoogleAITranslatorProps> = ({
             ) : translatedText ? (
               <div className="text-sm sm:text-base font-normal text-white leading-relaxed whitespace-pre-wrap selection:bg-indigo-500/40 font-sans">
                 {translatedText}
+              </div>
+            ) : translationError ? (
+              <div className="h-full flex flex-col items-center justify-center py-8 px-4 text-rose-300 text-xs text-center gap-3">
+                <span>{translationError}</span>
+                <button onClick={handlePerformTranslation} className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-500">Retry translation</button>
               </div>
             ) : (
               <div className="h-full flex flex-col items-center justify-center py-10 text-slate-500 text-xs text-center">
