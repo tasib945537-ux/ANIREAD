@@ -302,7 +302,13 @@ async function translateMangaPageWithLocalOcr(params: {
           if (proxyResponse.ok) response = proxyResponse;
           else throw new Error(`MangaDex image proxy returned ${proxyResponse.status}`);
         }
-      } catch { /* Use direct image fetch below if URL parsing or proxy is unavailable. */ }
+      } catch (error) {
+        if (error instanceof TypeError) {
+          // A malformed or non-absolute URL can still be attempted by the direct fetch path below.
+        } else {
+          throw error;
+        }
+      }
       if (!response) {
         response = await fetchWithTimeout(imageUrl, { mode: 'cors', credentials: 'omit' }, 15000);
       }
@@ -379,11 +385,9 @@ async function translateMangaPageWithLocalOcr(params: {
       }
     };
     await Promise.all(Array.from({ length: Math.min(4, selectedLines.length) }, () => translateWorker()));
-    /*
-    */
     return {
       pageNumber, imageUrl, targetLanguage, sourceLanguage, pageTitle: `Page ${pageNumber}`,
-      summary: 'Japanese manga text detected locally',
+      summary: `${activeLanguage} manga text detected locally`,
       summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
       dialogues, provider: 'local-tesseract-gtx',
       notice: `Gemini-free ${activeLanguage} OCR is active. Results depend on scan quality and text direction.`,
