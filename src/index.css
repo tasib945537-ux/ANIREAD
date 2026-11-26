@@ -91,3 +91,29 @@
   animation: animeLaserSweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+
+
+/* Mobile-first installed-app ergonomics and Android/iOS safe areas. */
+html, body, #root {
+  min-height: 100%;
+  min-height: 100dvh;
+}
+body {
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
