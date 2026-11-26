@@ -120,6 +120,7 @@ export const MangaReader: React.FC<Props> = ({
   const [failedPageSet, setFailedPageSet] = useState<Set<number>>(new Set());
   const [isTranslatingChapter, setIsTranslatingChapter] = useState(false);
   const [chapterProgress, setChapterProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
+  const [chapterTranslationStage, setChapterTranslationStage] = useState<string>('');
   const [rateLimitCooldownSec, setRateLimitCooldownSec] = useState<number>(0);
   const [statusPillDismissed, setStatusPillDismissed] = useState(false);
 
@@ -286,6 +287,8 @@ export const MangaReader: React.FC<Props> = ({
       if (isThisChapter) {
         setIsTranslatingChapter(job.status === 'running');
         setChapterProgress({ current: job.completedPages, total: job.totalPages });
+        setChapterTranslationStage(job.notice || '');
+        setFailedPageSet(new Set(job.failedPages || []));
 
         // Merge any newly translated pages from queue
         getChapterTranslations(chapter.mangaId, String(chapter.chapterNumber), targetLang, chapter.id).then((saved) => {
