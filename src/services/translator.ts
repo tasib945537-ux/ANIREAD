@@ -279,10 +279,11 @@ async function prepareOcrImage(image: Blob): Promise<Blob> {
 
 async function translateMangaPageWithLocalOcr(params: {
   imageUrl: string; imageDataBase64?: string; pageNumber: number;
-  targetLanguage: string; sourceLanguage: string;
+  targetLanguage: string; sourceLanguage: string; onProgress?: (stage: string) => void;
 }): Promise<TranslatedMangaPageResult> {
-  const { imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage } = params;
+  const { imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage, onProgress } = params;
   try {
+    onProgress?.('Downloading page image');
     let image: Blob;
     if (imageDataBase64) {
       const response = await fetch(imageDataBase64.startsWith('data:') ? imageDataBase64 : `data:image/jpeg;base64,${imageDataBase64}`);
@@ -308,12 +309,15 @@ async function translateMangaPageWithLocalOcr(params: {
       if (!response.ok) throw new Error(`Image request failed (${response.status})`);
       image = await response.blob();
     }
+    onProgress?.('Preparing image for OCR');
     image = await prepareOcrImage(image);
     const ocrLanguage = getOcrLanguage(sourceLanguage);
     let activeLanguage = ocrLanguage.primary;
+    onProgress?.(`Loading ${activeLanguage} OCR model (first use may take a while)`);
     let worker = await getLocalOcrWorker(activeLanguage);
     let recognition: any;
     try {
+      onProgress?.('Reading text from page');
       recognition = await withOcrTimeout(worker.recognize(image), 60000, 'Page OCR');
     } catch (error) {
       await discardOcrWorker(activeLanguage, worker);
@@ -344,22 +348,39 @@ async function translateMangaPageWithLocalOcr(params: {
     };
     const width = Math.max(1, recognition.data.imageSize?.width || 1);
     const height = Math.max(1, recognition.data.imageSize?.height || 1);
-    const dialogues = await Promise.all(lines.slice(0, 80).map(async (line: any, index: number) => {
-      const originalText = String(line.text || '').replace(/\s+/g, ' ').trim();
-      const translatedText = await translateText(originalText, targetLanguage, sourceLanguage === 'Auto' ? 'Japanese' : sourceLanguage);
-      const b = line.bbox || { x0: 0, y0: 0, x1: width, y1: height };
-      const xmin = Math.max(0, Math.min(1, b.x0 / width));
-      const ymin = Math.max(0, Math.min(1, b.y0 / height));
-      const xmax = Math.max(xmin + .01, Math.min(1, b.x1 / width));
-      const ymax = Math.max(ymin + .01, Math.min(1, b.y1 / height));
-      return {
-        id: index + 1, originalText, translatedText: translatedText || originalText,
-        detectedLanguage: 'Japanese', type: 'bubble' as const, direction: 'vertical' as const,
-        confidence: Math.max(0, Math.min(1, Number(line.confidence || 0) / 100)),
-        box: { ymin, xmin, ymax, xmax }, top: ymin * 100, left: xmin * 100,
-        width: (xmax - xmin) * 100, height: (ymax - ymin) * 100,
-      };
-    }));
+    const selectedLines = lines.slice(0, 60);
+    const dialogues: MangaPageDialogue[] = new Array(selectedLines.length);
+    let nextLineIndex = 0;
+    const translateWorker = async () => {
+      while (nextLineIndex < selectedLines.length) {
+        const index = nextLineIndex++;
+        const line = selectedLines[index];
+        onProgress?.(`Translating text ${index + 1}/${selectedLines.length}`);
+        const originalText = String(line.text || '').replace(/\s+/g, ' ').trim();
+        let translatedText = originalText;
+        try {
+          translatedText = await translateText(originalText, targetLanguage, sourceLanguage === 'Auto' ? 'Japanese' : sourceLanguage) || originalText;
+        } catch {
+          translatedText = originalText;
+        }
+        const b = line.bbox || { x0: 0, y0: 0, x1: width, y1: height };
+        const xmin = Math.max(0, Math.min(1, b.x0 / width));
+        const ymin = Math.max(0, Math.min(1, b.y0 / height));
+        const xmax = Math.max(xmin + .01, Math.min(1, b.x1 / width));
+        const ymax = Math.max(ymin + .01, Math.min(1, b.y1 / height));
+        dialogues[index] = {
+          id: index + 1, originalText, translatedText,
+          detectedLanguage: activeLanguage === 'eng' ? 'English' : activeLanguage === 'jpn_vert' || activeLanguage === 'jpn' ? 'Japanese' : activeLanguage,
+          type: 'bubble', direction: ocrLanguage.vertical ? 'vertical' : 'horizontal',
+          confidence: Math.max(0, Math.min(1, Number(line.confidence || 0) / 100)),
+          box: { ymin, xmin, ymax, xmax }, top: ymin * 100, left: xmin * 100,
+          width: (xmax - xmin) * 100, height: (ymax - ymin) * 100,
+        };
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(4, selectedLines.length) }, () => translateWorker()));
+    /*
+    */
     return {
       pageNumber, imageUrl, targetLanguage, sourceLanguage, pageTitle: `Page ${pageNumber}`,
       summary: 'Japanese manga text detected locally',
@@ -388,6 +409,7 @@ export async function translateMangaPage(params: {
   targetLanguage?: string;
   sourceLanguage?: string;
   force?: boolean;
+  onProgress?: (stage: string) => void;
 }): Promise<TranslatedMangaPageResult> {
   const {
     imageUrl = '',
@@ -400,6 +422,7 @@ export async function translateMangaPage(params: {
     targetLanguage = 'bn',
     sourceLanguage = 'Auto',
     force = false,
+    onProgress,
   } = params;
 
   const mangaIdentity = String(mangaId ?? mangaTitle);
@@ -430,7 +453,7 @@ export async function translateMangaPage(params: {
 
   // Manga image translation is intentionally Gemini-independent.
   const localResult = await translateMangaPageWithLocalOcr({
-    imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage,
+    imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage, onProgress,
   });
   if (localResult.dialogues.length > 0) {
     pageMemoryCache.set(cacheKey, localResult);
