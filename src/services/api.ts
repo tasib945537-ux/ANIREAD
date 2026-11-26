@@ -24,7 +24,9 @@ import {
   SortFilterType,
 } from './animeExplorerService';
 
-const rawApiBase = import.meta.env.VITE_API_BASE_URL || '';
+// Use the shared production API unless the frontend deployment overrides it.
+const rawApiBase = import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? 'https://aniread-api.onrender.com' : '');
 const API_BASE_URL = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
 
 // In-memory request cache
