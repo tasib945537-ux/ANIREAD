@@ -209,13 +209,55 @@ function getLocalizedPageLabel(pageNumber: number, targetLanguage: string): stri
 
 let localJapaneseOcrWorker: Promise<any> | null = null;
 
+function withOcrTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)}s`)), timeoutMs);
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); }
+    );
+  });
+}
+
 async function getLocalJapaneseOcrWorker() {
   if (!localJapaneseOcrWorker) {
-    localJapaneseOcrWorker = import('tesseract.js').then(({ createWorker }) =>
+    const creatingWorker = import('tesseract.js').then(({ createWorker }) =>
       createWorker('jpn_vert', 1, { logger: () => undefined })
-    ).catch((error) => { localJapaneseOcrWorker = null; throw error; });
+    );
+    localJapaneseOcrWorker = withOcrTimeout(creatingWorker, 60000, 'Japanese OCR model initialization')
+      .catch((error) => {
+        // If the model finishes loading after the timeout, release its worker instead of leaking it.
+        creatingWorker.then((worker) => worker.terminate()).catch(() => undefined);
+        localJapaneseOcrWorker = null;
+        throw error;
+      });
   }
   return localJapaneseOcrWorker;
+}
+
+async function prepareOcrImage(image: Blob): Promise<Blob> {
+  // Large manga scans are expensive to OCR on mobile. Resize only oversized images.
+  try {
+    const bitmap = await createImageBitmap(image);
+    const maxDimension = 1600;
+    if (Math.max(bitmap.width, bitmap.height) <= maxDimension) {
+      bitmap.close();
+      return image;
+    }
+    const scale = maxDimension / Math.max(bitmap.width, bitmap.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext('2d');
+    if (!context) { bitmap.close(); return image; }
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('Could not prepare manga image for OCR')), 'image/jpeg', 0.86);
+    });
+  } catch {
+    return image;
+  }
 }
 
 async function translateMangaPageWithLocalOcr(params: {
@@ -244,8 +286,16 @@ async function translateMangaPageWithLocalOcr(params: {
       if (!response.ok) throw new Error(`Image request failed (${response.status})`);
       image = await response.blob();
     }
+    image = await prepareOcrImage(image);
     let worker = await getLocalJapaneseOcrWorker();
-    let recognition = await worker.recognize(image);
+    let recognition: any;
+    try {
+      recognition = await withOcrTimeout(worker.recognize(image), 45000, 'Page OCR');
+    } catch (error) {
+      await worker.terminate().catch(() => undefined);
+      localJapaneseOcrWorker = null;
+      throw error;
+    }
     let lines = (recognition.data.lines || []).filter((line: any) =>
       String(line.text || '').trim() && Number(line.confidence || 0) >= 20
     );
@@ -253,9 +303,16 @@ async function translateMangaPageWithLocalOcr(params: {
       await worker.terminate();
       localJapaneseOcrWorker = null;
       const { createWorker } = await import('tesseract.js');
-      localJapaneseOcrWorker = createWorker('jpn', 1, { logger: () => undefined });
-      worker = await localJapaneseOcrWorker;
-      recognition = await worker.recognize(image);
+      const fallbackCreation = createWorker('jpn', 1, { logger: () => undefined });
+      worker = await withOcrTimeout(fallbackCreation, 60000, 'Japanese OCR fallback initialization');
+      localJapaneseOcrWorker = Promise.resolve(worker);
+      try {
+        recognition = await withOcrTimeout(worker.recognize(image), 45000, 'Fallback page OCR');
+      } catch (error) {
+        await worker.terminate().catch(() => undefined);
+        localJapaneseOcrWorker = null;
+        throw error;
+      }
       lines = (recognition.data.lines || []).filter((line: any) =>
         String(line.text || '').trim() && Number(line.confidence || 0) >= 20
       );
