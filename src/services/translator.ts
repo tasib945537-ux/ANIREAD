@@ -39,6 +39,7 @@ export const SUPPORTED_LANGUAGES: TranslationTarget[] = [
 
 const memoryCache = new Map<string, string>();
 const inFlightTranslations = new Map<string, Promise<string>>();
+const TRANSLATION_API_BASE = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 function stableTextHash(value: string): string {
   let hash = 2166136261;
@@ -49,18 +50,33 @@ function stableTextHash(value: string): string {
   return (hash >>> 0).toString(36);
 }
 
-/**
- * Translate text into the target language using server-side Gemini & Google Translate API with client caching and direct client fallback
- */
+function translationEndpoint(path: string): string {
+  return TRANSLATION_API_BASE ? `${TRANSLATION_API_BASE}${path}` : path;
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Server-first free translation with public-provider fallbacks and persistent caching. */
 export async function translateText(
   text: string,
   targetLangCode: string,
   sourceLang: string = 'English'
 ): Promise<string> {
-  if (!text || !text.trim()) return '';
-  if (targetLangCode === 'en' && sourceLang.toLowerCase() === 'english') return text;
+  const cleanText = String(text || '').trim();
+  if (!cleanText) return '';
+  const target = String(targetLangCode || 'en').toLowerCase();
+  const source = String(sourceLang || 'auto');
+  if (target === 'en' && source.toLowerCase() === 'english') return cleanText;
 
-  const cacheKey = `tr:${sourceLang.toLowerCase()}:${targetLangCode}:${stableTextHash(text)}:${text.length}`;
+  const cacheKey = `tr:v2:${source.toLowerCase()}:${target}:${stableTextHash(cleanText)}:${cleanText.length}`;
   const cached = memoryCache.get(cacheKey);
   if (cached) return cached;
   try {
@@ -71,24 +87,64 @@ export async function translateText(
   if (pending) return pending;
 
   const task = (async () => {
+    const remember = (value: string) => {
+      const result = value.trim();
+      if (!result || result === cleanText) return '';
+      memoryCache.set(cacheKey, result);
+      try { localStorage.setItem(cacheKey, result); } catch { /* storage quota */ }
+      return result;
+    };
+
+    // 1) Use ANIREAD's own API first. This avoids browser CORS issues with Google endpoints
+    // and lets web + Capacitor use the same translation service.
     try {
-      const src = sourceLang.toLowerCase() === 'auto'
-        ? 'auto'
-        : (sourceLang.length === 2 ? sourceLang : 'auto');
-      const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${encodeURIComponent(targetLangCode)}&dt=t&q=${encodeURIComponent(text)}`;
-      const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
-      if (!response.ok) return text;
-      const data = await response.json();
-      const translated = Array.isArray(data) && Array.isArray(data[0])
-        ? data[0].map((chunk: any) => chunk?.[0] || '').join('')
-        : '';
-      if (!translated) return text;
-      memoryCache.set(cacheKey, translated);
-      try { localStorage.setItem(cacheKey, translated); } catch { /* storage quota */ }
-      return translated;
-    } catch {
-      return text;
+      const response = await fetchWithTimeout(translationEndpoint('/api/translate'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText, targetLanguage: target, sourceLanguage: source }),
+      }, 9000);
+      if (response.ok) {
+        const data = await response.json();
+        const result = remember(String(data?.translatedText || ''));
+        if (result) return result;
+      }
+    } catch { /* Continue to independent public providers. */ }
+
+    // 2) Google Translate's keyless endpoint. Keep chunks modest for reliable mobile requests.
+    try {
+      const pieces: string[] = [];
+      for (let offset = 0; offset < cleanText.length; offset += 3500) {
+        const piece = cleanText.slice(offset, offset + 3500);
+        const src = source.toLowerCase() === 'auto' || source.length !== 2 ? 'auto' : source.toLowerCase();
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${encodeURIComponent(target)}&dt=t&q=${encodeURIComponent(piece)}`;
+        const response = await fetchWithTimeout(url, {}, 10000);
+        if (!response.ok) throw new Error(`Google Translate returned ${response.status}`);
+        const data = await response.json();
+        const translated = Array.isArray(data) && Array.isArray(data[0])
+          ? data[0].map((chunk: any) => chunk?.[0] || '').join('')
+          : '';
+        if (!translated) throw new Error('Google Translate returned an empty result');
+        pieces.push(translated);
+      }
+      const result = remember(pieces.join(''));
+      if (result) return result;
+    } catch { /* Continue to MyMemory. */ }
+
+    // 3) MyMemory fallback for shorter text.
+    if (cleanText.length <= 480) {
+      try {
+        const src = source.toLowerCase() === 'auto' ? 'en' : (source.length === 2 ? source : 'ja');
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(target)}`;
+        const response = await fetchWithTimeout(url, {}, 8000);
+        if (response.ok) {
+          const data = await response.json();
+          const result = remember(String(data?.responseData?.translatedText || ''));
+          if (result) return result;
+        }
+      } catch { /* Report a real failure instead of pretending original text was translated. */ }
     }
+
+    throw new Error('Translation services are temporarily unavailable. Check your internet connection and retry.');
   })().finally(() => inFlightTranslations.delete(cacheKey));
 
   inFlightTranslations.set(cacheKey, task);
