@@ -538,6 +538,12 @@ class TranslationQueueManager {
               targetLanguage: job.targetLanguage,
               sourceLanguage: job.sourceLanguage,
               force: true,
+              onProgress: (stage) => {
+                if (this.currentJob !== job || this.shouldStop) return;
+                job.notice = `Page ${pageNum}/${totalPages}: ${stage}`;
+                job.updatedAt = Date.now();
+                this.notify();
+              },
             });
 
             if (!result.rateLimited) break;
