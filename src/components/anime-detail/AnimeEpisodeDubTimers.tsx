@@ -246,9 +246,9 @@ export const AnimeEpisodeDubTimers: React.FC<Props> = ({
   };
 
   // Base Japanese timestamp
-  const jpTargetTimestamp =
-    anime.nextAiringEpisode?.airingAt ||
-    (isAiring ? nowSec + 3 * 86400 + 14 * 3600 : null);
+  // Only show a real airing timestamp from AniList. Never invent a fallback date:
+  // a missing schedule must be displayed as "not announced", not a fake countdown.
+  const jpTargetTimestamp = anime.nextAiringEpisode?.airingAt || null;
   const nextJpEpNumber =
     anime.nextAiringEpisode?.episode ||
     (anime.episodes ? Math.min(anime.episodes, 12) : 1);
@@ -257,7 +257,7 @@ export const AnimeEpisodeDubTimers: React.FC<Props> = ({
   // 1. Japanese
   const jpCountdown = jpTargetTimestamp ? calculateTimeLeft(jpTargetTimestamp) : null;
 
-  // 2. Hindi Dub Target: Crunchyroll India SimulDub typically drops offset days after JP episode
+  // 2. Hindi Dub Target: estimated offset only; it is not an official release schedule.
   const hindiTargetTimestamp =
     hasHindiDub && isAiring && jpTargetTimestamp
       ? jpTargetTimestamp + dubOffsetDays * 86400
@@ -265,7 +265,7 @@ export const AnimeEpisodeDubTimers: React.FC<Props> = ({
   const nextHindiEpNumber = Math.max(1, nextJpEpNumber - Math.floor(dubOffsetDays / 7));
   const hindiCountdown = hindiTargetTimestamp ? calculateTimeLeft(hindiTargetTimestamp) : null;
 
-  // 3. English Dub Target: Crunchyroll SimulDub typically drops 12 days after JP episode
+  // 3. English Dub Target: estimated offset only; it is not an official release schedule.
   const englishTargetTimestamp =
     hasEnglishDub && isAiring && jpTargetTimestamp
       ? jpTargetTimestamp + (dubOffsetDays - 2) * 86400
@@ -273,7 +273,7 @@ export const AnimeEpisodeDubTimers: React.FC<Props> = ({
   const nextEnglishEpNumber = Math.max(1, nextJpEpNumber - Math.floor((dubOffsetDays - 2) / 7));
   const englishCountdown = englishTargetTimestamp ? calculateTimeLeft(englishTargetTimestamp) : null;
 
-  // 4. Bengali Dub / Broadcast Target (Muse Asia YouTube schedule)
+  // 4. Bengali Dub / Broadcast Target: estimated offset only; verify an actual schedule before treating as confirmed.
   const bengaliTargetTimestamp =
     hasBengaliDub && isAiring && jpTargetTimestamp
       ? jpTargetTimestamp + (dubOffsetDays + 3) * 86400
@@ -281,7 +281,7 @@ export const AnimeEpisodeDubTimers: React.FC<Props> = ({
   const nextBengaliEpNumber = Math.max(1, nextJpEpNumber - 2);
   const bengaliCountdown = bengaliTargetTimestamp ? calculateTimeLeft(bengaliTargetTimestamp) : null;
 
-  // 5. Tamil / Telugu Regional Indian Dub Target
+  // 5. Tamil / Telugu Regional Indian Dub Target: estimated offset only.
   const tamilTeluguTargetTimestamp =
     (hasTamilDub || hasTeluguDub) && isAiring && jpTargetTimestamp
       ? jpTargetTimestamp + (dubOffsetDays + 4) * 86400
@@ -289,7 +289,7 @@ export const AnimeEpisodeDubTimers: React.FC<Props> = ({
   const nextTamilEpNumber = Math.max(1, nextJpEpNumber - 2);
   const tamilTeluguCountdown = tamilTeluguTargetTimestamp ? calculateTimeLeft(tamilTeluguTargetTimestamp) : null;
 
-  // 6. Spanish Dub Target
+  // 6. Spanish Dub Target: estimated offset only.
   const spanishTargetTimestamp =
     hasSpanishDub && isAiring && jpTargetTimestamp
       ? jpTargetTimestamp + dubOffsetDays * 86400
