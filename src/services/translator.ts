@@ -507,6 +507,22 @@ export async function translateMangaPage(params: {
   }
 
   const apiKey = getMangaTranslationApiKey();
+
+  // No Gemini key: skip the rate-limited server vision endpoint entirely.
+  // Use the built-in local OCR + free text translation pipeline directly.
+  if (!apiKey) {
+    onProgress?.('Using free local OCR + built-in translation (no API key needed)');
+    const localResult = await translateMangaPageWithLocalOcr({
+      imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage, onProgress,
+    });
+    if (localResult.dialogues?.length) {
+      localResult.notice = 'Translated with built-in OCR + free text translation.';
+      pageMemoryCache.set(cacheKey, localResult);
+      try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
+    }
+    return localResult;
+  }
+
   onProgress?.('Sending manga page to AI vision translator');
   try {
     const response = await fetchWithTimeout(translationEndpoint('/api/translate-page'), {
@@ -548,12 +564,14 @@ export async function translateMangaPage(params: {
     }
 
     // Keyless fallback: run local OCR and translate recognized text through the existing free text-translation fallback.
-    if (['MISSING_API_KEY', 'RATE_LIMITED', 'MODEL_UNAVAILABLE', 'VISION_ERROR'].includes(String(data.errorCode || '')) || !data.dialogues?.length) {
+    if (data.rateLimited || ['MISSING_API_KEY', 'RATE_LIMITED', 'MODEL_UNAVAILABLE', 'VISION_ERROR'].includes(String(data.errorCode || '')) || !data.dialogues?.length) {
       onProgress?.('Vision unavailable; switching to free local OCR fallback');
       const localResult = await translateMangaPageWithLocalOcr({
         imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage, onProgress,
       });
       if (localResult.dialogues?.length) {
+        localResult.rateLimited = false;
+        localResult.retryInSeconds = undefined;
         localResult.notice = `${localResult.notice || ''} Vision AI unavailable; used local OCR + free text translation.`.trim();
         pageMemoryCache.set(cacheKey, localResult);
         try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
