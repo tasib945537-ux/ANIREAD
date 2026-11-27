@@ -106,6 +106,7 @@ export const MangaReader: React.FC<Props> = ({
   const [isOfflineSource, setIsOfflineSource] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
+  const [offlineDownloadError, setOfflineDownloadError] = useState('');
   const [readingDirection, setReadingDirection] = useState<'rtl' | 'ltr'>('ltr');
 
   // AI Manga Page Translation States
@@ -467,6 +468,7 @@ export const MangaReader: React.FC<Props> = ({
   const handleDownload = async () => {
     if (isDownloading || isDownloaded || pages.length === 0) return;
     setIsDownloading(true);
+    setOfflineDownloadError('');
 
     try {
       await downloadChapterForOffline(
@@ -479,6 +481,8 @@ export const MangaReader: React.FC<Props> = ({
       );
       setIsDownloaded(true);
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Offline download failed. Please retry.';
+      setOfflineDownloadError(message);
       console.error('Failed to download chapter:', err);
     } finally {
       setIsDownloading(false);
@@ -1461,6 +1465,11 @@ export const MangaReader: React.FC<Props> = ({
               Diff Inspector
             </button>
 
+            {offlineDownloadError && (
+              <span role="status" title={offlineDownloadError} className="max-w-[180px] truncate text-[10px] text-rose-300">
+                {offlineDownloadError}
+              </span>
+            )}
             {isDownloaded ? (
               <span className="flex items-center gap-1 text-[11px] text-emerald-400 bg-emerald-950/50 border border-emerald-800/60 px-2 py-0.5 rounded-md">
                 <Check className="w-3 h-3" />
