@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   getAuth,
   GoogleAuthProvider,
+  GithubAuthProvider,
   signInWithPopup,
   signOut,
   type User,
@@ -87,6 +88,14 @@ void testConnection();
 export async function signInWithGooglePopup(): Promise<User> {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
+  const result = await signInWithPopup(auth, provider);
+  return result.user;
+}
+
+export async function signInWithGithubPopup(): Promise<User> {
+  const provider = new GithubAuthProvider();
+  provider.addScope('read:user');
+  provider.addScope('user:email');
   const result = await signInWithPopup(auth, provider);
   return result.user;
 }
