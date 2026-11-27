@@ -356,6 +356,7 @@ async function translateMangaPageWithLocalOcr(params: {
     const height = Math.max(1, recognition.data.imageSize?.height || 1);
     const selectedLines = lines.slice(0, 60);
     const dialogues: MangaPageDialogue[] = new Array(selectedLines.length);
+    const translationFailures: number[] = [];
     let nextLineIndex = 0;
     const translateWorker = async () => {
       while (nextLineIndex < selectedLines.length) {
@@ -363,11 +364,19 @@ async function translateMangaPageWithLocalOcr(params: {
         const line = selectedLines[index];
         onProgress?.(`Translating text ${index + 1}/${selectedLines.length}`);
         const originalText = String(line.text || '').replace(/\s+/g, ' ').trim();
-        let translatedText = originalText;
+        let translatedText = '';
         try {
-          translatedText = await translateText(originalText, targetLanguage, sourceLanguage === 'Auto' ? 'Japanese' : sourceLanguage) || originalText;
+          const candidate = await translateText(
+            originalText,
+            targetLanguage,
+            sourceLanguage === 'Auto' ? 'Japanese' : sourceLanguage
+          );
+          if (!candidate || candidate.trim() === originalText) {
+            throw new Error('Translation provider returned the original text.');
+          }
+          translatedText = candidate.trim();
         } catch {
-          translatedText = originalText;
+          translationFailures.push(index);
         }
         const b = line.bbox || { x0: 0, y0: 0, x1: width, y1: height };
         const xmin = Math.max(0, Math.min(1, b.x0 / width));
@@ -385,6 +394,18 @@ async function translateMangaPageWithLocalOcr(params: {
       }
     };
     await Promise.all(Array.from({ length: Math.min(4, selectedLines.length) }, () => translateWorker()));
+    if (translationFailures.length > 0) {
+      return {
+        pageNumber, imageUrl, targetLanguage, sourceLanguage,
+        pageTitle: `Page ${pageNumber}`,
+        summary: `OCR detected ${selectedLines.length} text regions`,
+        summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
+        dialogues: [],
+        provider: 'untranslated',
+        errorCode: 'TEXT_TRANSLATION_FAILED',
+        notice: `OCR detected text, but translation failed for ${translationFailures.length} region(s). Check the connection and retry this page.`,
+      };
+    }
     return {
       pageNumber, imageUrl, targetLanguage, sourceLanguage, pageTitle: `Page ${pageNumber}`,
       summary: `${activeLanguage} manga text detected locally`,
