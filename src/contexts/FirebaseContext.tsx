@@ -154,8 +154,12 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       await signInWithGooglePopup();
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
+      const code = typeof err === 'object' && err && 'code' in err ? String((err as { code?: string }).code || '') : '';
+      const message = code === 'auth/unauthorized-domain'
+        ? 'This website domain is not authorized in Firebase. Add aniread-api.onrender.com under Firebase Authentication → Settings → Authorized domains.'
+        : code === 'auth/operation-not-allowed'
+          ? 'Google sign-in is not enabled. Enable Google under Firebase Authentication → Sign-in method.'
+          : err instanceof Error ? err.message : 'Google sign-in failed. Please try again.';
       setAuthError(message);
     } finally {
       setAuthBusy(false);
