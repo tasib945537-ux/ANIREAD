@@ -220,13 +220,20 @@ function withOcrTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string
 }
 
 function getOcrLanguage(sourceLanguage: string): { primary: string; fallback?: string; vertical: boolean } {
-  const source = String(sourceLanguage || 'Auto').toLowerCase();
-  if (source === 'ja' || source.includes('japanese') || source === 'auto') {
+  const source = String(sourceLanguage || 'Auto').trim().toLowerCase();
+
+  // MangaDex chapters usually provide an explicit language. When metadata is
+  // missing, prefer English first because AniRead prioritizes English chapters;
+  // fall back to Japanese only when English OCR finds no usable text.
+  if (source === 'auto' || source === 'und' || source === 'unknown') {
+    return { primary: 'eng', fallback: 'jpn_vert', vertical: false };
+  }
+  if (source === 'ja' || source.includes('japanese') || source.includes('日本語')) {
     return { primary: 'jpn_vert', fallback: 'jpn', vertical: true };
   }
   if (source === 'en' || source.includes('english')) return { primary: 'eng', vertical: false };
-  if (source === 'ko' || source.includes('korean')) return { primary: 'kor', vertical: false };
-  if (source === 'zh' || source.includes('chinese')) return { primary: 'chi_sim', vertical: false };
+  if (source === 'ko' || source.includes('korean') || source.includes('한국어')) return { primary: 'kor', vertical: false };
+  if (source === 'zh' || source.includes('chinese') || source.includes('中文')) return { primary: 'chi_sim', vertical: false };
   if (source === 'ru' || source.includes('russian')) return { primary: 'rus', vertical: false };
   return { primary: 'eng', vertical: false };
 }
