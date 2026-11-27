@@ -1,3 +1,4 @@
+import { apiUrl } from './apiUrl';
 import { OfflineChapterData, ReadingProgress, AnimeItem, MangaItem } from '../types/anime';
 import {
   syncDubListItemToCloud,
@@ -102,32 +103,52 @@ export async function downloadChapterForOffline(
 ): Promise<OfflineChapterData> {
   const downloadedPages: string[] = [];
   let totalBytes = 0;
+  const failedPages: number[] = [];
 
   for (let i = 0; i < pageUrls.length; i++) {
     const url = pageUrls[i];
     try {
-      const response = await fetch(url, { mode: 'cors' });
+      let response: Response;
+      if (url.startsWith('data:image/')) {
+        response = await fetch(url);
+      } else {
+        try {
+          response = await fetch(url, { mode: 'cors' });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        } catch {
+          // MangaDex@Home nodes can reject browser CORS. Retry through ANIREAD's
+          // allow-listed MangaDex image proxy before declaring the page unavailable.
+          response = await fetch(apiUrl(`/api/manga-image?url=${encodeURIComponent(url)}`));
+        }
+      }
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const blob = await response.blob();
+      if (!blob.size || !blob.type.startsWith('image/')) {
+        throw new Error('The server did not return a valid image.');
+      }
       totalBytes += blob.size;
 
-      // Convert Blob to Data URL for reliable offline retrieval in iframe/service worker
-      const base64 = await new Promise<string>((res, rej) => {
+      const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onloadend = () => res(reader.result as string);
-        reader.onerror = rej;
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error || new Error('Could not store image.'));
         reader.readAsDataURL(blob);
       });
-
       downloadedPages.push(base64);
-    } catch {
-      // Fallback: save original URL if fetch fails
-      downloadedPages.push(url);
+    } catch (error) {
+      console.warn(`Offline page ${i + 1} could not be saved:`, error);
+      failedPages.push(i + 1);
     }
 
-    if (onProgress) {
-      onProgress(i + 1, pageUrls.length);
-    }
+    onProgress?.(i + 1, pageUrls.length);
+  }
+
+  // Never mark a partial download as offline-ready: remote URLs fail without a connection.
+  if (failedPages.length > 0 || downloadedPages.length !== pageUrls.length) {
+    throw new Error(
+      `Offline download incomplete: ${downloadedPages.length}/${pageUrls.length} pages saved. Retry the download while connected.`
+    );
   }
 
   const chapterData: OfflineChapterData = {
