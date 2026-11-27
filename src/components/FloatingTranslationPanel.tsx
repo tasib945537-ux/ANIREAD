@@ -240,7 +240,7 @@ export const FloatingTranslationPanel: React.FC<Props> = ({ onOpenReader }) => {
                 {liveEtaSeconds > 0
                   ? `ETA: ~${formatDuration(liveEtaSeconds)}`
                   : job.recentPageDurationsMs && job.recentPageDurationsMs.length >= 2
-                    ? 'ETA: finishing up'
+                    ? 'ETA: recalculating...'
                     : 'ETA: measuring speed...'}
               </span>
             </div>
