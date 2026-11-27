@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud, BookOpen, KeyRound, Github } from 'lucide-react';
+import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud, BookOpen, KeyRound } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { TranslatorDropdown } from './TranslatorDropdown';
 import { getUIText } from '../services/translator';
@@ -28,7 +28,7 @@ export const Header: React.FC<Props> = ({
   onOpenTranslator,
   onOpenApiKeySettings,
 }) => {
-  const { user, authReady, authBusy, authError, signInWithGoogle, signInWithGithub, logoutUser } = useFirebase();
+  const { user, authReady, authBusy, authError, signInWithGoogle, logoutUser } = useFirebase();
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#0b0f19]/95 backdrop-blur-md">
@@ -217,21 +217,11 @@ export const Header: React.FC<Props> = ({
                   type="button"
                   onClick={signInWithGoogle}
                   disabled={authBusy}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
-                  title="Sign in with Google / Gmail"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                  title="Create account or sign in with Google"
                 >
                   <LogIn className="w-3.5 h-3.5 text-indigo-300" />
-                  <span className="hidden sm:inline">{authBusy ? 'Signing in...' : 'Gmail'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={signInWithGithub}
-                  disabled={authBusy}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
-                  title="Sign in with GitHub"
-                >
-                  <Github className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">GitHub</span>
+                  <span>{authBusy ? 'Redirecting...' : 'Continue with Google'}</span>
                 </button>
               </div>
             )
