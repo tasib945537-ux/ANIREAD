@@ -119,7 +119,7 @@ const aniListInFlight = new Map<string, Promise<AniListProxyResult>>();
 let aniListQueue: Promise<void> = Promise.resolve();
 let aniListNextAllowedAt = 0;
 
-function requestAniListInOrder(payload: Record<string, unknown>): Promise<Response> {
+function requestAniListInOrder(payload: Record<string, unknown>): Promise<globalThis.Response> {
   const request = aniListQueue.then(async () => {
     const waitMs = Math.max(0, aniListNextAllowedAt - Date.now());
     if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
@@ -155,14 +155,15 @@ app.post('/api/anilist', async (req: Request, res: Response) => {
   }
   if (cached) aniListResponseCache.delete(cacheKey);
 
-  let pending = aniListInFlight.get(cacheKey);
+  let pending: Promise<AniListProxyResult> | undefined = aniListInFlight.get(cacheKey);
   if (!pending) {
-    pending = requestAniListInOrder(payload).then(async (upstream) => ({
+    const created: Promise<AniListProxyResult> = requestAniListInOrder(payload).then(async (upstream): Promise<AniListProxyResult> => ({
       status: upstream.status,
       body: await upstream.text(),
       retryAfter: upstream.headers.get('retry-after') || undefined,
     }));
-    aniListInFlight.set(cacheKey, pending);
+    aniListInFlight.set(cacheKey, created);
+    pending = created;
   }
 
   try {
