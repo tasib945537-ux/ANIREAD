@@ -402,6 +402,22 @@ async function translateMangaPageWithLocalOcr(params: {
   }
 }
 
+/** A per-tab key is used only for this browser session and is never persisted to localStorage. */
+const MANGA_TRANSLATION_KEY_STORAGE = 'aniread_manga_gemini_key_session';
+
+export function getMangaTranslationApiKey(): string {
+  try { return sessionStorage.getItem(MANGA_TRANSLATION_KEY_STORAGE) || ''; }
+  catch { return ''; }
+}
+
+export function setMangaTranslationApiKey(value: string): void {
+  try {
+    const clean = String(value || '').trim();
+    if (clean) sessionStorage.setItem(MANGA_TRANSLATION_KEY_STORAGE, clean);
+    else sessionStorage.removeItem(MANGA_TRANSLATION_KEY_STORAGE);
+  } catch { /* session storage may be disabled */ }
+}
+
 export async function translateMangaPage(params: {
   imageUrl?: string;
   imageDataBase64?: string;
@@ -431,39 +447,76 @@ export async function translateMangaPage(params: {
 
   const mangaIdentity = String(mangaId ?? mangaTitle);
   const chapterIdentity = String(chapterId ?? chapterNumber);
-  const cacheKey = `manga_page_v5:${encodeURIComponent(mangaIdentity)}:${encodeURIComponent(chapterIdentity)}:${chapterNumber}:${pageNumber}:${sourceLanguage.toLowerCase()}:${targetLanguage}`;
+  const cacheKey = `manga_vision_v1:${encodeURIComponent(mangaIdentity)}:${encodeURIComponent(chapterIdentity)}:${pageNumber}:${sourceLanguage.toLowerCase()}:${targetLanguage}`;
   if (!force && pageMemoryCache.has(cacheKey)) {
-    const cachedItem = pageMemoryCache.get(cacheKey)!;
-    if (!cachedItem.rateLimited && cachedItem.provider !== 'untranslated' && cachedItem.dialogues?.length > 0) {
-      return cachedItem;
-    }
+    const cached = pageMemoryCache.get(cacheKey)!;
+    if (cached.dialogues?.length && cached.provider !== 'untranslated') return { ...cached, cached: true };
   }
-
-  // Also check persistent storage (only accept real non-empty translations)
   if (!force) {
     try {
-      const stored = localStorage.getItem(cacheKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && !parsed.rateLimited && parsed.provider !== 'untranslated' && parsed.dialogues?.length > 0) {
+      const saved = localStorage.getItem(cacheKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as TranslatedMangaPageResult;
+        if (parsed?.dialogues?.length && parsed.provider !== 'untranslated') {
           pageMemoryCache.set(cacheKey, parsed);
-          return parsed;
+          return { ...parsed, cached: true };
         }
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore invalid or unavailable cache */ }
   }
 
-  // Manga image translation is intentionally Gemini-independent.
-  const localResult = await translateMangaPageWithLocalOcr({
-    imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage, onProgress,
-  });
-  if (localResult.dialogues.length > 0) {
-    pageMemoryCache.set(cacheKey, localResult);
-    try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
+  const apiKey = getMangaTranslationApiKey();
+  onProgress?.('Sending manga page to AI vision translator');
+  try {
+    const response = await fetchWithTimeout(translationEndpoint('/api/translate-page'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { 'x-gemini-api-key': apiKey } : {}),
+      },
+      body: JSON.stringify({
+        imageUrl,
+        imageDataBase64,
+        pageNumber,
+        chapterNumber,
+        mangaTitle,
+        targetLanguage,
+        sourceLanguage,
+        force,
+      }),
+    }, 120000);
+
+    const data = await response.json().catch(() => null) as TranslatedMangaPageResult | null;
+    if (!response.ok) {
+      throw new Error(`Translation server returned HTTP ${response.status}`);
+    }
+    if (!data) throw new Error('Translation server returned an invalid response');
+
+    if (data.dialogues?.length && data.provider !== 'untranslated') {
+      pageMemoryCache.set(cacheKey, data);
+      try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch { /* storage quota */ }
+    }
+    return {
+      ...data,
+      pageNumber: data.pageNumber || pageNumber,
+      imageUrl: data.imageUrl || imageUrl,
+      targetLanguage: data.targetLanguage || targetLanguage,
+      sourceLanguage: data.sourceLanguage || sourceLanguage,
+    };
+  } catch (error: any) {
+    return {
+      pageNumber, imageUrl, targetLanguage, sourceLanguage,
+      pageTitle: `Page ${pageNumber}`,
+      summary: `Page ${pageNumber}`,
+      summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
+      dialogues: [],
+      provider: 'untranslated',
+      errorCode: error?.name === 'AbortError' ? 'TRANSLATION_TIMEOUT' : 'NETWORK_ERROR',
+      notice: error?.name === 'AbortError'
+        ? 'AI vision translation timed out. Check the API key or server and retry.'
+        : String(error?.message || 'Translation service unavailable.').slice(0, 180),
+    };
   }
-  return localResult;
 }
 
 /**
