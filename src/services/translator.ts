@@ -424,19 +424,20 @@ async function translateMangaPageWithLocalOcr(params: {
 }
 
 /** A per-tab key is used only for this browser session and is never persisted to localStorage. */
-const MANGA_TRANSLATION_KEY_STORAGE = 'aniread_manga_gemini_key_session';
+const MANGA_TRANSLATION_KEY_STORAGE = 'aniread_gemini_api_key_v1';
+const LEGACY_MANGA_SESSION_KEY = 'aniread_manga_gemini_key_session';
 
 export function getMangaTranslationApiKey(): string {
-  try { return sessionStorage.getItem(MANGA_TRANSLATION_KEY_STORAGE) || ''; }
-  catch { return ''; }
+  try { return localStorage.getItem(MANGA_TRANSLATION_KEY_STORAGE) || sessionStorage.getItem(LEGACY_MANGA_SESSION_KEY) || ''; }
+  catch { try { return sessionStorage.getItem(LEGACY_MANGA_SESSION_KEY) || ''; } catch { return ''; } }
 }
 
 export function setMangaTranslationApiKey(value: string): void {
   try {
     const clean = String(value || '').trim();
-    if (clean) sessionStorage.setItem(MANGA_TRANSLATION_KEY_STORAGE, clean);
-    else sessionStorage.removeItem(MANGA_TRANSLATION_KEY_STORAGE);
-  } catch { /* session storage may be disabled */ }
+    if (clean) { localStorage.setItem(MANGA_TRANSLATION_KEY_STORAGE, clean); sessionStorage.setItem(LEGACY_MANGA_SESSION_KEY, clean); }
+    else { localStorage.removeItem(MANGA_TRANSLATION_KEY_STORAGE); sessionStorage.removeItem(LEGACY_MANGA_SESSION_KEY); }
+  } catch { /* browser storage may be disabled */ }
 }
 
 export async function verifyMangaTranslationApiKey(value: string): Promise<{ valid: boolean; message: string }> {
