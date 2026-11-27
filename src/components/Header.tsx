@@ -1,11 +1,11 @@
 import React from 'react';
-import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud, BookOpen, KeyRound } from 'lucide-react';
+import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud, BookOpen } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { TranslatorDropdown } from './TranslatorDropdown';
 import { getUIText } from '../services/translator';
 import { useFirebase } from '../contexts/FirebaseContext';
 
-export type NavTab = 'anime' | 'upcoming' | 'manga' | 'read' | 'characters' | 'library' | 'directory' | 'api-keys';
+export type NavTab = 'anime' | 'upcoming' | 'manga' | 'read' | 'characters' | 'library' | 'directory';
 
 interface Props {
   activeTab: NavTab;
@@ -122,15 +122,6 @@ export const Header: React.FC<Props> = ({
           >
             <span>🌐</span>
             <span>Directory</span>
-          </button>
-          <button
-            onClick={() => onTabChange('api-keys')}
-            className={`transition-colors whitespace-nowrap py-1 flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'api-keys' ? 'text-amber-300 border-b-2 border-amber-500 font-semibold' : 'text-slate-400 hover:text-amber-300'
-            }`}
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>API Key</span>
           </button>
         </nav>
 
@@ -282,15 +273,6 @@ export const Header: React.FC<Props> = ({
         >
           <span>🌐</span>
           <span>Directory</span>
-        </button>
-        <button
-          onClick={() => onTabChange('api-keys')}
-          className={`px-2.5 py-1 rounded-lg whitespace-nowrap transition-colors shrink-0 flex items-center gap-1 cursor-pointer ${
-            activeTab === 'api-keys' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <KeyRound className="w-3 h-3" />
-          <span>API Key</span>
         </button>
         {onOpenSupport && (
           <button
