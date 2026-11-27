@@ -516,6 +516,27 @@ export async function translateMangaPage(params: {
     if (data.dialogues?.length && data.provider !== 'untranslated') {
       pageMemoryCache.set(cacheKey, data);
       try { localStorage.setItem(cacheKey, JSON.stringify(data)); } catch { /* storage quota */ }
+      return {
+        ...data,
+        pageNumber: data.pageNumber || pageNumber,
+        imageUrl: data.imageUrl || imageUrl,
+        targetLanguage: data.targetLanguage || targetLanguage,
+        sourceLanguage: data.sourceLanguage || sourceLanguage,
+      };
+    }
+
+    // Keyless fallback: run local OCR and translate recognized text through the existing free text-translation fallback.
+    if (['MISSING_API_KEY', 'RATE_LIMITED', 'MODEL_UNAVAILABLE', 'VISION_ERROR'].includes(String(data.errorCode || '')) || !data.dialogues?.length) {
+      onProgress?.('Vision unavailable; switching to free local OCR fallback');
+      const localResult = await translateMangaPageWithLocalOcr({
+        imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage, onProgress,
+      });
+      if (localResult.dialogues?.length) {
+        localResult.notice = `${localResult.notice || ''} Vision AI unavailable; used local OCR + free text translation.`.trim();
+        pageMemoryCache.set(cacheKey, localResult);
+        try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
+        return localResult;
+      }
     }
     return {
       ...data,
@@ -525,17 +546,21 @@ export async function translateMangaPage(params: {
       sourceLanguage: data.sourceLanguage || sourceLanguage,
     };
   } catch (error: any) {
+    onProgress?.('Vision request failed; trying free local OCR fallback');
+    const localResult = await translateMangaPageWithLocalOcr({
+      imageUrl, imageDataBase64, pageNumber, targetLanguage, sourceLanguage, onProgress,
+    });
+    if (localResult.dialogues?.length) {
+      localResult.notice = `${localResult.notice || ''} Vision request failed; used local OCR + free text translation.`.trim();
+      pageMemoryCache.set(cacheKey, localResult);
+      try { localStorage.setItem(cacheKey, JSON.stringify(localResult)); } catch { /* storage quota */ }
+      return localResult;
+    }
     return {
-      pageNumber, imageUrl, targetLanguage, sourceLanguage,
-      pageTitle: `Page ${pageNumber}`,
-      summary: `Page ${pageNumber}`,
-      summaryTranslated: getLocalizedPageLabel(pageNumber, targetLanguage),
-      dialogues: [],
+      ...localResult,
       provider: 'untranslated',
-      errorCode: error?.name === 'AbortError' ? 'TRANSLATION_TIMEOUT' : 'NETWORK_ERROR',
-      notice: error?.name === 'AbortError'
-        ? 'AI vision translation timed out. Check the API key or server and retry.'
-        : String(error?.message || 'Translation service unavailable.').slice(0, 180),
+      errorCode: error?.name === 'AbortError' ? 'TRANSLATION_TIMEOUT' : (localResult.errorCode || 'NETWORK_ERROR'),
+      notice: `AI vision failed (${String(error?.message || 'network error').slice(0, 90)}); local fallback: ${localResult.notice || 'No text could be read.'}`,
     };
   }
 }
