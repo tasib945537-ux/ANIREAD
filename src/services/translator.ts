@@ -58,6 +58,21 @@ function translationEndpoint(path: string): string {
   return TRANSLATION_API_BASE ? `${TRANSLATION_API_BASE}${path}` : path;
 }
 
+function translationLanguageCode(value: string): string {
+  const normalized = String(value || 'auto').trim().toLowerCase();
+  if (!normalized || normalized === 'auto' || normalized === 'und' || normalized === 'unknown') return 'auto';
+  const match = SUPPORTED_LANGUAGES.find((language) =>
+    language.code.toLowerCase() === normalized ||
+    language.name.toLowerCase() === normalized ||
+    language.nativeName.toLowerCase() === normalized
+  );
+  if (match) return match.code;
+  const shortCode = normalized.match(/^([a-z]{2})(?:[-_][a-z0-9]+)?$/);
+  return shortCode ? shortCode[1] : 'auto';
+}
+
+
+
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -119,7 +134,7 @@ export async function translateText(
       const pieces: string[] = [];
       for (let offset = 0; offset < cleanText.length; offset += 3500) {
         const piece = cleanText.slice(offset, offset + 3500);
-        const src = source.toLowerCase() === 'auto' || source.length !== 2 ? 'auto' : source.toLowerCase();
+        const src = translationLanguageCode(source);
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${src}&tl=${encodeURIComponent(target)}&dt=t&q=${encodeURIComponent(piece)}`;
         const response = await fetchWithTimeout(url, {}, 10000);
         if (!response.ok) throw new Error(`Google Translate returned ${response.status}`);
@@ -137,7 +152,7 @@ export async function translateText(
     // 3) MyMemory fallback for shorter text.
     if (cleanText.length <= 480) {
       try {
-        const src = source.toLowerCase() === 'auto' ? 'en' : (source.length === 2 ? source : 'ja');
+        const src = translationLanguageCode(source) === 'auto' ? 'ja' : translationLanguageCode(source);
         const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(target)}`;
         const response = await fetchWithTimeout(url, {}, 8000);
         if (response.ok) {
