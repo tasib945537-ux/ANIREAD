@@ -4,6 +4,9 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  setPersistence,
+  browserLocalPersistence,
   signOut,
   type User,
 } from 'firebase/auth';
@@ -85,19 +88,20 @@ async function testConnection(): Promise<void> {
 
 void testConnection();
 
-export async function signInWithGooglePopup(): Promise<User> {
+export async function signInWithGooglePopup(): Promise<void> {
+  await setPersistence(auth, browserLocalPersistence);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  const result = await signInWithPopup(auth, provider);
-  return result.user;
+  // Redirect is more reliable than popups in Android WebView/mobile browsers.
+  await signInWithRedirect(auth, provider);
 }
 
-export async function signInWithGithubPopup(): Promise<User> {
+export async function signInWithGithubPopup(): Promise<void> {
+  await setPersistence(auth, browserLocalPersistence);
   const provider = new GithubAuthProvider();
   provider.addScope('read:user');
   provider.addScope('user:email');
-  const result = await signInWithPopup(auth, provider);
-  return result.user;
+  await signInWithRedirect(auth, provider);
 }
 
 export async function signOutFirebase(): Promise<void> {
