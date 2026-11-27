@@ -20,7 +20,7 @@ import {
 } from '../services/mangaTranslationService';
 
 interface Props {
-  onOpenReader?: (mangaId: string | number, chapterNumber: string) => void;
+  onOpenReader?: (mangaId: string | number, chapterNumber: string, mangaTitle?: string, mangaCover?: string) => void;
 }
 
 function formatDuration(seconds: number): string {
@@ -33,6 +33,7 @@ function formatDuration(seconds: number): string {
 
 export const FloatingTranslationPanel: React.FC<Props> = ({ onOpenReader }) => {
   const [job, setJob] = useState<TranslationJob | null>(null);
+  const [clockNow, setClockNow] = useState(Date.now());
 
   useEffect(() => {
     const unsubscribe = mangaTranslationQueue.subscribe((current) => {
@@ -41,11 +42,19 @@ export const FloatingTranslationPanel: React.FC<Props> = ({ onOpenReader }) => {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   if (!job) return null;
 
   const isCompleted = job.status === 'completed';
   const isPaused = job.status === 'paused' || job.status === 'stopped';
   const isRunning = job.status === 'running';
+  const liveEtaSeconds = isRunning && job.estimatedSecondsRemaining > 0
+    ? Math.max(0, job.estimatedSecondsRemaining - Math.floor(Math.max(0, clockNow - job.updatedAt) / 1000))
+    : job.estimatedSecondsRemaining;
 
   // Minimized floating badge
   if (job.isMinimized) {
@@ -56,6 +65,16 @@ export const FloatingTranslationPanel: React.FC<Props> = ({ onOpenReader }) => {
         className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-950/95 border border-indigo-500/70 shadow-2xl backdrop-blur-md text-white animate-in fade-in slide-in-from-bottom-3 duration-200"
       >
         <div className="flex items-center gap-2">
+          {onOpenReader && (
+            <button
+              onClick={() => onOpenReader(job.mangaId, job.chapterNumber, job.mangaTitle, job.mangaCoverImage)}
+              className="p-1 rounded-lg hover:bg-indigo-950/60 text-indigo-300 transition-colors cursor-pointer"
+              title="Open this manga chapter"
+              aria-label="Open manga chapter"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+            </button>
+          )}
           {isRunning && (
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping shrink-0" />
           )}
@@ -218,13 +237,17 @@ export const FloatingTranslationPanel: React.FC<Props> = ({ onOpenReader }) => {
             <div className="flex items-center gap-1.5 bg-slate-900/60 rounded-lg px-2.5 py-1.5 border border-slate-800">
               <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span className="truncate">
-                {job.estimatedSecondsRemaining > 0
-                  ? `ETA: ${formatDuration(job.estimatedSecondsRemaining)}`
-                  : 'ETA: calculating...'}
+                {liveEtaSeconds > 0
+                  ? `ETA: ~${formatDuration(liveEtaSeconds)}`
+                  : job.recentPageDurationsMs && job.recentPageDurationsMs.length >= 2
+                    ? 'ETA: finishing up'
+                    : 'ETA: measuring speed...'}
               </span>
             </div>
           </div>
         )}
+
+        <p className="text-[9px] text-slate-500 -mt-1">ETA is estimated from recent completed pages and updates with actual processing time.</p>
 
         {/* Notice/Cooldown Banner */}
         {job.notice && (
@@ -274,11 +297,22 @@ export const FloatingTranslationPanel: React.FC<Props> = ({ onOpenReader }) => {
             </>
           )}
 
+          {onOpenReader && !isCompleted && (
+            <button
+              onClick={() => onOpenReader(job.mangaId, job.chapterNumber, job.mangaTitle, job.mangaCoverImage)}
+              className="flex-1 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:scale-95"
+              title="Open the original manga while translation continues"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Open Manga</span>
+            </button>
+          )}
+
           {isCompleted && (
             <>
               {onOpenReader && (
                 <button
-                  onClick={() => onOpenReader(job.mangaId, job.chapterNumber)}
+                  onClick={() => onOpenReader(job.mangaId, job.chapterNumber, job.mangaTitle, job.mangaCoverImage)}
                   className="flex-1 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md transition-colors cursor-pointer active:scale-95"
                 >
                   <BookOpen className="w-3.5 h-3.5" />
