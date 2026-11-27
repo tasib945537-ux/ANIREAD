@@ -3,7 +3,6 @@ import {
   getAuth,
   GoogleAuthProvider,
   GithubAuthProvider,
-  signInWithPopup,
   signInWithRedirect,
   setPersistence,
   browserLocalPersistence,
