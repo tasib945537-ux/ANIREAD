@@ -571,6 +571,10 @@ export const MangaReader: React.FC<Props> = ({
         force: true,
       });
 
+      if (res.errorCode === 'MISSING_API_KEY') {
+        setShowApiKeyPanel(true);
+        setApiKeyCheckMessage('This server has no Gemini key configured. Add your own key here, or ask the site owner to configure one on the server.');
+      }
       const hasValidDialogues = Boolean(res.dialogues && res.dialogues.length > 0 && res.provider !== 'untranslated');
       if (!hasValidDialogues) {
         if (res.provider === 'untranslated') {
