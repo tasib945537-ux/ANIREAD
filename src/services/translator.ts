@@ -418,6 +418,25 @@ export function setMangaTranslationApiKey(value: string): void {
   } catch { /* session storage may be disabled */ }
 }
 
+export async function verifyMangaTranslationApiKey(value: string): Promise<{ valid: boolean; message: string }> {
+  const candidate = String(value || '').trim();
+  if (!candidate) return { valid: false, message: 'Enter an API key first.' };
+  try {
+    const response = await fetchWithTimeout(translationEndpoint('/api/gemini-key-check'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-gemini-api-key': candidate },
+      body: JSON.stringify({}),
+    }, 15000);
+    const data = await response.json().catch(() => ({}));
+    return {
+      valid: Boolean(response.ok && data.valid),
+      message: String(data.message || (response.ok ? 'Google accepted the key.' : 'The key could not be verified.')),
+    };
+  } catch {
+    return { valid: false, message: 'Could not reach the ANIREAD server to verify this key.' };
+  }
+}
+
 export async function translateMangaPage(params: {
   imageUrl?: string;
   imageDataBase64?: string;
@@ -480,6 +499,8 @@ export async function translateMangaPage(params: {
         pageNumber,
         chapterNumber,
         mangaTitle,
+        mangaId,
+        chapterId,
         targetLanguage,
         sourceLanguage,
         force,
