@@ -35,6 +35,8 @@ export interface TranslationJob {
   status: 'running' | 'paused' | 'stopped' | 'completed' | 'failed';
   speedPagesPerMin: number;
   estimatedSecondsRemaining: number;
+  /** Last real page durations (including network/API wait), used for a rolling ETA. */
+  recentPageDurationsMs?: number[];
   startedAt: number;
   updatedAt: number;
   isMinimized?: boolean;
@@ -267,6 +269,7 @@ class TranslationQueueManager {
   private listeners = new Set<(job: TranslationJob | null) => void>();
   private startTime = 0;
   private pagesProcessedThisSession = 0;
+  private currentPageStartedAt = 0;
 
   constructor() {
     this.restoreActiveJob();
@@ -309,7 +312,7 @@ class TranslationQueueManager {
 
       if (job && job.status === 'running') {
         // Resume running job from where it left off
-        this.currentJob = { ...job, status: 'paused', notice: 'Translation paused upon reload. Click Resume to continue.' };
+        this.currentJob = { ...job, status: 'paused', speedPagesPerMin: 0, estimatedSecondsRemaining: 0, notice: 'Translation paused upon reload. Click Resume to continue.' };
         this.notify();
       }
     } catch {
@@ -402,6 +405,7 @@ class TranslationQueueManager {
       status: 'running',
       speedPagesPerMin: 0,
       estimatedSecondsRemaining: 0,
+      recentPageDurationsMs: [],
       startedAt: Date.now(),
       updatedAt: Date.now(),
       isMinimized: false,
@@ -410,6 +414,7 @@ class TranslationQueueManager {
     this.shouldStop = false;
     this.startTime = Date.now();
     this.pagesProcessedThisSession = 0;
+    this.currentPageStartedAt = 0;
     this.notify();
     await this.persistCurrentJob();
 
@@ -433,6 +438,9 @@ class TranslationQueueManager {
     this.shouldStop = false;
     this.startTime = Date.now();
     this.pagesProcessedThisSession = 0;
+    this.currentPageStartedAt = 0;
+    this.currentJob.speedPagesPerMin = 0;
+    this.currentJob.estimatedSecondsRemaining = 0;
     this.notify();
     this.processQueue();
   }
@@ -473,13 +481,24 @@ class TranslationQueueManager {
       // Smart Resume: Identify all untranslated page indices
       const existing = await getChapterTranslations(job.mangaId, job.chapterNumber, job.targetLanguage, job.chapterId);
 
-      // Create ordered list of pages to process starting from current page or first untranslated
+      // The saved pages in IndexedDB are the source of truth. Reconcile old/stale
+      // job counters (which could show e.g. 5 completed while resuming at page 86).
+      const savedCompletedCount = Object.keys(existing).filter((key) =>
+        existing[Number(key)]?.dialogues?.length > 0
+      ).length;
+      job.completedPages = savedCompletedCount;
+      job.remainingPages = Math.max(0, totalPages - savedCompletedCount);
+      job.progressPercent = Math.round((savedCompletedCount / totalPages) * 100);
+
+      // Build the pending list from actual missing pages, not a stale currentPage value.
       const pendingPages: number[] = [];
       for (let p = 1; p <= totalPages; p++) {
-        if (!existing[p] || !existing[p].dialogues) {
-          pendingPages.push(p);
-        }
+        if (!existing[p] || !existing[p].dialogues?.length) pendingPages.push(p);
       }
+      if (pendingPages.length > 0) job.currentPage = pendingPages[0];
+      job.updatedAt = Date.now();
+      this.notify();
+      await this.persistCurrentJob();
 
       // If all pages already completed!
       if (pendingPages.length === 0) {
@@ -504,16 +523,10 @@ class TranslationQueueManager {
         job.remainingPages = Math.max(0, totalPages - job.completedPages);
         job.progressPercent = Math.round((job.completedPages / totalPages) * 100);
 
-        // Calculate dynamic pages per minute speed & estimated time remaining
-        const elapsedSec = (Date.now() - this.startTime) / 1000;
-        if (elapsedSec > 2 && this.pagesProcessedThisSession > 0) {
-          const speed = (this.pagesProcessedThisSession / elapsedSec) * 60;
-          job.speedPagesPerMin = Math.round(speed * 10) / 10;
-          const remainingSec = Math.round((job.remainingPages / (speed / 60)));
-          job.estimatedSecondsRemaining = isFinite(remainingSec) ? Math.max(0, remainingSec) : 0;
-        }
-
-        job.updatedAt = Date.now();
+        // Start a real per-page timer. ETA is calculated after completed pages,
+        // using the rolling duration of the last five pages (OCR + network + provider).
+        this.currentPageStartedAt = Date.now();
+        job.updatedAt = this.currentPageStartedAt;
         this.notify();
 
         const imgUrl = job.pageUrls[pageNum - 1] || '';
@@ -609,16 +622,46 @@ class TranslationQueueManager {
 
           job.remainingPages = Math.max(0, totalPages - job.completedPages);
           job.progressPercent = Math.round((job.completedPages / totalPages) * 100);
+
+          const pageDurationMs = this.currentPageStartedAt > 0
+            ? Math.max(1000, Date.now() - this.currentPageStartedAt)
+            : 0;
+          if (pageDurationMs > 0) {
+            const samples = [...(job.recentPageDurationsMs || []), pageDurationMs].slice(-5);
+            job.recentPageDurationsMs = samples;
+            if (samples.length >= 2) {
+              const averagePageMs = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+              job.speedPagesPerMin = Math.round((60000 / averagePageMs) * 10) / 10;
+              job.estimatedSecondsRemaining = Math.max(0, Math.ceil((averagePageMs * job.remainingPages) / 1000));
+            } else {
+              job.speedPagesPerMin = 0;
+              job.estimatedSecondsRemaining = 0;
+            }
+          }
+          this.currentPageStartedAt = 0;
           job.updatedAt = Date.now();
           this.notify();
           await this.persistCurrentJob();
 
         } catch (err) {
           console.warn(`Translation error on page ${pageNum}:`, err);
-          if (!job.failedPages.includes(pageNum)) {
-            job.failedPages.push(pageNum);
+          if (!job.failedPages.includes(pageNum)) job.failedPages.push(pageNum);
+          const failedDurationMs = this.currentPageStartedAt > 0
+            ? Math.max(1000, Date.now() - this.currentPageStartedAt)
+            : 0;
+          if (failedDurationMs > 0) {
+            const samples = [...(job.recentPageDurationsMs || []), failedDurationMs].slice(-5);
+            job.recentPageDurationsMs = samples;
+            if (samples.length >= 2) {
+              const averagePageMs = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+              job.speedPagesPerMin = Math.round((60000 / averagePageMs) * 10) / 10;
+              job.estimatedSecondsRemaining = Math.max(0, Math.ceil((averagePageMs * job.remainingPages) / 1000));
+            }
           }
+          this.currentPageStartedAt = 0;
+          job.updatedAt = Date.now();
           this.notify();
+          await this.persistCurrentJob();
         }
 
         // Pacing delay between pages (150ms) to ensure smooth browser rendering and network balance
