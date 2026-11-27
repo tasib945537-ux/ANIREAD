@@ -111,33 +111,84 @@ app.get('/api/health', (_req, res) => {
 app.use(express.json({ limit: '15mb' }));
 
 // Shared AniList GraphQL proxy for anime and manga metadata.
-// Both the website and Android app call this same endpoint.
-app.post('/api/anilist', async (req: Request, res: Response) => {
-  const { query, variables, operationName } = req.body || {};
-  if (typeof query !== 'string' || !query.trim() || query.length > 100000) {
-    return res.status(400).json({ errors: [{ message: 'A valid AniList GraphQL query is required.' }] });
-  }
+// The queue stays below AniList's public request ceiling; response caching and
+// in-flight de-duplication prevent repeated detail views from exhausting it.
+type AniListProxyResult = { status: number; body: string; retryAfter?: string };
+const aniListResponseCache = new Map<string, { expiresAt: number; result: AniListProxyResult }>();
+const aniListInFlight = new Map<string, Promise<AniListProxyResult>>();
+let aniListQueue: Promise<void> = Promise.resolve();
+let aniListNextAllowedAt = 0;
 
-  try {
-    const upstream = await fetch('https://graphql.anilist.co', {
+function requestAniListInOrder(payload: Record<string, unknown>): Promise<Response> {
+  const request = aniListQueue.then(async () => {
+    const waitMs = Math.max(0, aniListNextAllowedAt - Date.now());
+    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+    aniListNextAllowedAt = Date.now() + 900;
+    return fetch('https://graphql.anilist.co', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         'User-Agent': 'ANIREAD/1.0 (https://github.com/tasib945537-ux/ANIREAD)',
       },
-      body: JSON.stringify({ query, variables: variables || {}, operationName }),
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(15000),
     });
-    const body = await upstream.text();
-    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+  });
+  aniListQueue = request.then(() => undefined, () => undefined);
+  return request;
+}
+
+app.post('/api/anilist', async (req: Request, res: Response) => {
+  const { query, variables, operationName } = req.body || {};
+  if (typeof query !== 'string' || !query.trim() || query.length > 100000) {
+    return res.status(400).json({ errors: [{ message: 'A valid AniList GraphQL query is required.' }] });
+  }
+
+  const payload = { query, variables: variables || {}, operationName };
+  const cacheKey = JSON.stringify(payload);
+  const cached = aniListResponseCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    res.setHeader('X-ANIREAD-API-Cache', 'HIT');
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    return res.status(cached.result.status).type('application/json').send(cached.result.body);
+  }
+  if (cached) aniListResponseCache.delete(cacheKey);
+
+  let pending = aniListInFlight.get(cacheKey);
+  if (!pending) {
+    pending = requestAniListInOrder(payload).then(async (upstream) => ({
+      status: upstream.status,
+      body: await upstream.text(),
+      retryAfter: upstream.headers.get('retry-after') || undefined,
+    }));
+    aniListInFlight.set(cacheKey, pending);
+  }
+
+  try {
+    const result = await pending;
+    if (result.status === 200 && result.body.includes('"data"')) {
+      aniListResponseCache.set(cacheKey, { expiresAt: Date.now() + 5 * 60 * 1000, result });
+      if (aniListResponseCache.size > 250) {
+        const oldestKey = aniListResponseCache.keys().next().value;
+        if (oldestKey) aniListResponseCache.delete(oldestKey);
+      }
+    }
+    res.setHeader('X-ANIREAD-API-Cache', 'MISS');
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
     res.setHeader('X-Content-Type-Options', 'nosniff');
-    return res.status(upstream.status).type('application/json').send(body);
+    if (result.status === 429) {
+      res.setHeader('Retry-After', result.retryAfter || '5');
+      return res.status(503).type('application/json').send(result.body);
+    }
+    return res.status(result.status).type('application/json').send(result.body);
   } catch (error: any) {
     return res.status(502).json({
       errors: [{ message: 'AniList metadata service is temporarily unavailable.' }],
       detail: String(error?.message || error).slice(0, 120),
     });
+  } finally {
+    if (aniListInFlight.get(cacheKey) === pending) aniListInFlight.delete(cacheKey);
   }
 });
 
