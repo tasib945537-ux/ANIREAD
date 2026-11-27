@@ -107,7 +107,40 @@ app.get('/api/manga-image', async (req: Request, res: Response) => {
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, app: 'ANIREAD API', timestamp: new Date().toISOString() });
 });
+
 app.use(express.json({ limit: '15mb' }));
+
+// Shared AniList GraphQL proxy for anime and manga metadata.
+// Both the website and Android app call this same endpoint.
+app.post('/api/anilist', async (req: Request, res: Response) => {
+  const { query, variables, operationName } = req.body || {};
+  if (typeof query !== 'string' || !query.trim() || query.length > 100000) {
+    return res.status(400).json({ errors: [{ message: 'A valid AniList GraphQL query is required.' }] });
+  }
+
+  try {
+    const upstream = await fetch('https://graphql.anilist.co', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'User-Agent': 'ANIREAD/1.0 (https://github.com/tasib945537-ux/ANIREAD)',
+      },
+      body: JSON.stringify({ query, variables: variables || {}, operationName }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const body = await upstream.text();
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return res.status(upstream.status).type('application/json').send(body);
+  } catch (error: any) {
+    return res.status(502).json({
+      errors: [{ message: 'AniList metadata service is temporarily unavailable.' }],
+      detail: String(error?.message || error).slice(0, 120),
+    });
+  }
+});
+
 
 // Discord-style AniRead Community Router
 app.use('/api/community', communityRouter);
