@@ -803,8 +803,13 @@ For each detected text region, output:
 
       if (is429) {
         const match = msg.match(/retry in ([0-9.]+)s/i);
-        const retrySec = match ? Math.ceil(parseFloat(match[1])) : 45;
-        geminiCooldownUntil = Date.now() + retrySec * 1000;
+        const providerRetrySec = match ? Math.ceil(parseFloat(match[1])) : 45;
+        // Gemini free-tier quota is minute-windowed. A shorter provider hint can
+        // expire before the quota window resets, causing a 42s wait followed by
+        // another fresh 45s cooldown. Keep one safe 60s window and never shorten
+        // a cooldown already established by a concurrent page request.
+        const retrySec = Math.max(60, providerRetrySec, Math.ceil((geminiCooldownUntil - Date.now()) / 1000));
+        geminiCooldownUntil = Math.max(geminiCooldownUntil, Date.now() + retrySec * 1000);
         console.warn(`Gemini vision quota rate limit reached (429). Activating ${retrySec}s cooldown.`);
         return res.json({
           pageNumber,
