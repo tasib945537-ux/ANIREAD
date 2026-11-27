@@ -142,6 +142,7 @@ export default function App() {
     const handleUrlChange = () => {
       const path = window.location.pathname.toLowerCase();
       const hash = window.location.hash.toLowerCase();
+      setShowApiKeySettings(path === '/settings/api-key' || hash === '#settings/api-key');
       if (path.startsWith('/read') || hash === '#read' || hash.startsWith('#read/')) {
         setActiveTab('read');
       } else if (path === '/directory' || hash === '#directory' || hash.startsWith('#directory/')) {
