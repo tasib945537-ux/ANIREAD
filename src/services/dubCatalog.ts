@@ -2249,7 +2249,7 @@ export function getAnimeDubInfo(
   );
 
   const isExplicitlySubOnlyHindi = Boolean(
-    (!rebuiltHindi && /\b(eminence in shadow|kage no jitsuryokusha|bocchi the rock|cyberpunk edgerunners|violet evergarden|your lie in april|toradora|darling in the franxx|steins gate|berserk|code geass|black lagoon|monster|bungo stray dogs|blue exorcist|no game no life|parasyte|a silent voice|jujutsu kaisen 0)\b/i.test(`${title} ${englishTitle || ''}`)) ||
+    (!rebuiltHindi && !hasVerifiedCatalogHindi && /\b(eminence in shadow|kage no jitsuryokusha|bocchi the rock|cyberpunk edgerunners|violet evergarden|your lie in april|toradora|darling in the franxx|steins gate|berserk|code geass|black lagoon|monster|bungo stray dogs|blue exorcist|no game no life|parasyte|a silent voice|jujutsu kaisen 0)\b/i.test(`${title} ${englishTitle || ''}`)) ||
     (rebuiltHindi && rebuiltHindi.hindiDubStatus === 'Announced')
   );
 
