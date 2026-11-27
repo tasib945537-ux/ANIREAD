@@ -34,7 +34,7 @@ export const AnimeCard: React.FC<Props> = ({
     if (type === 'manga') {
       if (currentSrc && !currentSrc.includes('/api/image-proxy') && !currentSrc.includes('/api/proxy-image')) {
         setCurrentSrc(`/api/image-proxy?url=${encodeURIComponent(currentSrc)}`);
-      } else if (item.bannerImage && currentSrc !== item.bannerImage && !currentSrc.includes('/api/image-proxy')) {
+      } else if (item.bannerImage && currentSrc !== item.bannerImage) {
         setCurrentSrc(item.bannerImage);
       } else {
         setHasFailed(true);
