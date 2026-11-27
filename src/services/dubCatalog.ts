@@ -2200,6 +2200,14 @@ export function getAnimeDubInfo(
     typeof animeOrTitle === 'object' ? animeOrTitle : { title, englishTitle, nativeTitle }
   );
   const hindiVAs = vaByLang.get('hindi') || [];
+  // Also trust the explicit official-title catalogue. Previously this source was
+  // ignored for Hindi, so a title like DARLING in the FRANXX was falsely marked
+  // sub-only even though its official Crunchyroll audio listing includes Hindi.
+  const catalogOfficialHindi = catalogEntry?.languages.find((l) => l.language === 'Hindi');
+  const hasVerifiedCatalogHindi = Boolean(
+    catalogOfficialHindi &&
+    ['Available', 'Confirmed', 'Partial'].includes(catalogOfficialHindi.status)
+  );
   const catalogHindi = rebuiltHindi
     ? {
         language: 'Hindi' as const,
@@ -2228,7 +2236,7 @@ export function getAnimeDubInfo(
         voiceActors: [] as Array<{ name: string; character?: string }>,
         studios: rebuiltHindi.studios,
       }
-    : undefined;
+    : catalogOfficialHindi;
 
   const isMatchedHindiKw = Boolean(
     rebuiltHindi && (rebuiltHindi.hindiDubStatus === 'Complete' || rebuiltHindi.hindiDubStatus === 'Partial')
@@ -2247,6 +2255,7 @@ export function getAnimeDubInfo(
 
   const hasHindiDub = !isExplicitlySubOnlyHindi && Boolean(
     isMatchedHindiKw ||
+    hasVerifiedCatalogHindi ||
     hasExplicitAudioLangHindi ||
     hindiVAs.length > 0
   );
