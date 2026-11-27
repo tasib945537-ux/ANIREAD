@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud, BookOpen } from 'lucide-react';
+import { Search, LifeBuoy, Calendar, LogIn, LogOut, Cloud, BookOpen, KeyRound } from 'lucide-react';
 import { PWAInstallButton } from './PWAInstallButton';
 import { TranslatorDropdown } from './TranslatorDropdown';
 import { getUIText } from '../services/translator';
@@ -15,6 +15,7 @@ interface Props {
   onSearchFocus: () => void;
   onOpenSupport?: () => void;
   onOpenTranslator?: () => void;
+  onOpenApiKeySettings?: () => void;
 }
 
 export const Header: React.FC<Props> = ({
@@ -25,6 +26,7 @@ export const Header: React.FC<Props> = ({
   onSearchFocus,
   onOpenSupport,
   onOpenTranslator,
+  onOpenApiKeySettings,
 }) => {
   const { user, authReady, authBusy, signInWithGoogle, logoutUser } = useFirebase();
 
@@ -147,6 +149,18 @@ export const Header: React.FC<Props> = ({
             >
               <span className="text-xs">🌐</span>
               <span className="hidden sm:inline">AI Translator</span>
+            </button>
+          )}
+
+          {onOpenApiKeySettings && (
+            <button
+              type="button"
+              onClick={onOpenApiKeySettings}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+              title="Gemini API Key settings"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-indigo-300" />
+              <span className="hidden md:inline">API Key</span>
             </button>
           )}
 
