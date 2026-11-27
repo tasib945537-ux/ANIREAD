@@ -32,7 +32,7 @@ export const Header: React.FC<Props> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#0b0f19]/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-3 sm:px-6 h-16">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 px-2.5 sm:px-6 h-16 min-w-0">
         {/* Zone 1: Wordmark */}
         <a
           href="#home"
@@ -128,11 +128,11 @@ export const Header: React.FC<Props> = ({
         </nav>
 
         {/* Zone 3: Actions */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2.5 shrink min-w-0">
           {onOpenSupport && (
             <button
               onClick={onOpenSupport}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-indigo-200 border border-indigo-500/30 text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
               title="Support & Quick Replies (Official gamerbangla436@gmail.com)"
             >
               <LifeBuoy className="w-3.5 h-3.5 text-indigo-400" />
@@ -144,7 +144,7 @@ export const Header: React.FC<Props> = ({
           {onOpenTranslator && (
             <button
               onClick={onOpenTranslator}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 hover:text-purple-200 border border-purple-500/30 text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 hover:text-purple-200 border border-purple-500/30 text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
               title="Google AI Translator (Live 100+ World Languages & Voice)"
             >
               <span className="text-xs">🌐</span>
@@ -156,7 +156,7 @@ export const Header: React.FC<Props> = ({
             <button
               type="button"
               onClick={onOpenApiKeySettings}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+              className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
               title="Gemini API Key settings"
             >
               <KeyRound className="w-3.5 h-3.5 text-indigo-300" />
@@ -177,7 +177,7 @@ export const Header: React.FC<Props> = ({
             onLanguageChange={onLanguageChange}
             onOpenTranslator={onOpenTranslator}
           />
-          <PWAInstallButton />
+          <div className="hidden sm:block"><PWAInstallButton /></div>
 
           {authReady && (
             user ? (
@@ -217,11 +217,11 @@ export const Header: React.FC<Props> = ({
                   type="button"
                   onClick={signInWithGoogle}
                   disabled={authBusy}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
                   title="Create account or sign in with Google"
                 >
                   <LogIn className="w-3.5 h-3.5 text-indigo-300" />
-                  <span>{authBusy ? 'Redirecting...' : 'Continue with Google'}</span>
+                  <span className="hidden sm:inline">{authBusy ? 'Redirecting...' : 'Google'}</span>
                 </button>
               </div>
             )
