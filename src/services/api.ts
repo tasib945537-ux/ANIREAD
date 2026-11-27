@@ -29,6 +29,12 @@ const rawApiBase = import.meta.env.VITE_API_BASE_URL ||
   (import.meta.env.PROD ? 'https://aniread-api.onrender.com' : '');
 const API_BASE_URL = rawApiBase.endsWith('/') ? rawApiBase.slice(0, -1) : rawApiBase;
 
+// Route AniList requests through the shared ANIREAD API so web and Android
+// use the same metadata endpoint and server-side timeout/CORS handling.
+function aniListEndpoint(): string {
+  return API_BASE_URL ? `${API_BASE_URL}/api/anilist` : '/api/anilist';
+}
+
 // In-memory request cache
 const apiCache = new Map<string, { timestamp: number; data: any }>();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
@@ -898,7 +904,7 @@ async function getAniListAnimeDetails(id: number, titleHint?: string, malIdHint?
 
   // Try 1: By AniList ID
   try {
-    const res = await fetch('https://graphql.anilist.co', {
+    const res = await fetch(aniListEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ query: queryById, variables: { id } }),
@@ -915,7 +921,7 @@ async function getAniListAnimeDetails(id: number, titleHint?: string, malIdHint?
   if (!m) {
     const targetMalId = malIdHint || id;
     try {
-      const res = await fetch('https://graphql.anilist.co', {
+      const res = await fetch(aniListEndpoint(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ query: queryByMal, variables: { idMal: targetMalId } }),
@@ -933,7 +939,7 @@ async function getAniListAnimeDetails(id: number, titleHint?: string, malIdHint?
   if (!m && titleHint) {
     try {
       const cleanTitle = titleHint.split(/[:\-(]/)[0].replace(/[^\w\s]/gi, ' ').trim();
-      const res = await fetch('https://graphql.anilist.co', {
+      const res = await fetch(aniListEndpoint(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ query: queryBySearch, variables: { search: cleanTitle || titleHint } }),
@@ -1360,7 +1366,7 @@ export async function getTopCharacters(page: number = 1): Promise<{ characters: 
         }
       }
     `;
-    const res = await fetch('https://graphql.anilist.co', {
+    const res = await fetch(aniListEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ query: gql, variables: { page } }),
@@ -1681,7 +1687,7 @@ export async function searchManga(
     if (query && query.trim()) variables.search = query.trim();
     if (genre && genre !== 'All' && genre !== 'all') variables.genre = genre;
 
-    const res = await fetch('https://graphql.anilist.co', {
+    const res = await fetch(aniListEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ query: gqlQuery, variables }),
@@ -2118,7 +2124,7 @@ export async function getMangaDetails(
     // Pass 1: Query by AniList ID if numeric
     if (numericId) {
       try {
-        const res = await fetch('https://graphql.anilist.co', {
+        const res = await fetch(aniListEndpoint(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({ query: gql, variables: { id: numericId } }),
@@ -2135,7 +2141,7 @@ export async function getMangaDetails(
     // Pass 2: Query by MAL ID
     if (!aniMedia && (malId || numericId)) {
       try {
-        const res = await fetch('https://graphql.anilist.co', {
+        const res = await fetch(aniListEndpoint(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({ query: gql, variables: { idMal: malId || numericId } }),
@@ -2153,7 +2159,7 @@ export async function getMangaDetails(
     if (!aniMedia && searchTitle) {
       try {
         const cleanTitle = searchTitle.split(/[:\-(]/)[0].replace(/[^\w\s]/gi, ' ').trim();
-        const res = await fetch('https://graphql.anilist.co', {
+        const res = await fetch(aniListEndpoint(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({ query: gql, variables: { search: cleanTitle || searchTitle } }),
@@ -2323,7 +2329,7 @@ export async function checkAllApis(): Promise<{
   let anilistStatus: 'healthy' | 'degraded' = 'healthy';
   let anilistMsg = 'AniList GraphQL Connected (50,000+ Titles)';
   try {
-    const res = await fetch('https://graphql.anilist.co', {
+    const res = await fetch(aniListEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: '{ Page(page: 1, perPage: 1) { media(type: ANIME) { id } } }' }),
@@ -2738,7 +2744,7 @@ async function getAniListMedia(
     }
   `;
 
-  const res = await fetch('https://graphql.anilist.co', {
+  const res = await fetch(aniListEndpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ query, variables: { page: effectivePage, perPage, type, sort } }),
@@ -2986,7 +2992,7 @@ async function searchAniListMedia(
   if (bucketStart) variables.startDate_greater = bucketStart;
   if (bucketEnd) variables.startDate_lesser = bucketEnd;
 
-  const res = await fetch('https://graphql.anilist.co', {
+  const res = await fetch(aniListEndpoint(), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     body: JSON.stringify({ query, variables }),
@@ -3012,7 +3018,7 @@ async function searchAniListMedia(
     if (options?.isLicensed !== undefined) fallbackVars.isLicensed = options.isLicensed;
     if (options?.countryOfOrigin) fallbackVars.countryOfOrigin = options.countryOfOrigin;
 
-    const retryRes = await fetch('https://graphql.anilist.co', {
+    const retryRes = await fetch(aniListEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ query, variables: fallbackVars }),
@@ -3168,7 +3174,7 @@ export async function getTrendingSpotlight(): Promise<{ anime: AnimeItem[]; mang
       }
     `;
 
-    const res = await fetch('https://graphql.anilist.co', {
+    const res = await fetch(aniListEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ query }),
@@ -3352,7 +3358,7 @@ export async function getUpcomingAniListAnime(params: {
   }
 
   try {
-    const res = await fetch('https://graphql.anilist.co', {
+    const res = await fetch(aniListEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ query, variables }),
