@@ -29,6 +29,20 @@ export const AnimeCard: React.FC<Props> = ({
   }, [item.coverImage]);
 
   const handleImageError = () => {
+    // Manga posters must never be sent to the anime-only cover resolver. Try the
+    // allow-listed image proxy first, then the manga's own banner/alternate cover.
+    if (type === 'manga') {
+      if (currentSrc && !currentSrc.includes('/api/image-proxy') && !currentSrc.includes('/api/proxy-image')) {
+        setCurrentSrc(`/api/image-proxy?url=${encodeURIComponent(currentSrc)}`);
+      } else if (item.bannerImage && currentSrc !== item.bannerImage && !currentSrc.includes('/api/image-proxy')) {
+        setCurrentSrc(item.bannerImage);
+      } else {
+        setHasFailed(true);
+      }
+      return;
+    }
+
+    // Keep the existing anime cover resolver behavior unchanged.
     if (
       currentSrc &&
       !currentSrc.includes('/api/anime-cover') &&
