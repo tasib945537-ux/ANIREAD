@@ -926,6 +926,11 @@ export const MangaReader: React.FC<Props> = ({
                       placeholder={apiKeySaved ? 'Enter a new key to replace it' : 'Paste Gemini API key'}
                       className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500"
                     />
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-indigo-300 hover:text-indigo-200 underline underline-offset-2">Google AI Studio — Get API key</a>
+                      <button type="button" onClick={() => { window.location.hash = '#settings/api-key'; setShowApiKeyPanel(false); }} className="text-slate-300 hover:text-white underline underline-offset-2">Details & setup guide</button>
+                    </div>
+                    <p className="mt-2 text-[11px] leading-relaxed text-slate-500">No key needed for the built-in Bengali, Hindi and English text translator. A Gemini key is optional for AI manga-image translation.</p>
                     <div className="mt-3 flex items-center gap-2">
                       <button
                         onClick={async () => {
