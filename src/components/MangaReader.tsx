@@ -28,6 +28,7 @@ import {
   ChevronUp,
   Clock,
   Hash,
+  KeyRound,
 } from 'lucide-react';
 import { MangaChapter, OfflineChapterData } from '../types/anime';
 import { getChapterPages } from '../services/api';
@@ -39,7 +40,7 @@ import {
 import { GoogleAITranslator, ALL_WORLD_LANGUAGES } from './GoogleAITranslator';
 import { MangaPageDifferenceViewer } from './MangaPageDifferenceViewer';
 import { MangaCanvasPage } from './MangaCanvasPage';
-import { translateMangaPage, TranslatedMangaPageResult } from '../services/translator';
+import { translateMangaPage, TranslatedMangaPageResult, getMangaTranslationApiKey, setMangaTranslationApiKey, verifyMangaTranslationApiKey } from '../services/translator';
 import {
   mangaTranslationQueue,
   getChapterTranslations,
@@ -94,6 +95,11 @@ export const MangaReader: React.FC<Props> = ({
   const [jumpPageInput, setJumpPageInput] = useState('');
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showAiTranslator, setShowAiTranslator] = useState(false);
+  const [showApiKeyPanel, setShowApiKeyPanel] = useState(false);
+  const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [apiKeySaved, setApiKeySaved] = useState(() => Boolean(getMangaTranslationApiKey()));
+  const [apiKeyCheckBusy, setApiKeyCheckBusy] = useState(false);
+  const [apiKeyCheckMessage, setApiKeyCheckMessage] = useState('');
   const [showPageDiffModal, setShowPageDiffModal] = useState(false);
   const [diffTargetPage, setDiffTargetPage] = useState(1);
   const [chapterLangFilter, setChapterLangFilter] = useState<string>('all');
@@ -564,6 +570,11 @@ export const MangaReader: React.FC<Props> = ({
         sourceLanguage: chapter.language || 'Auto',
         force: true,
       });
+
+      if (res.errorCode === 'MISSING_API_KEY') {
+        setShowApiKeyPanel(true);
+        setApiKeyCheckMessage('This server has no Gemini key configured. Add your own key here, or ask the site owner to configure one on the server.');
+      }
       const hasValidDialogues = Boolean(res.dialogues && res.dialogues.length > 0 && res.provider !== 'untranslated');
       if (!hasValidDialogues) {
         if (res.provider === 'untranslated') {
@@ -866,6 +877,91 @@ export const MangaReader: React.FC<Props> = ({
                         </button>
                       ))}
                     </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Optional per-session Gemini key. It stays in sessionStorage and is sent only to the ANIREAD API for manga page translation. */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => { setShowApiKeyPanel((open) => !open); setApiKeyDraft(''); }}
+                className={`h-9 px-3 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap ${
+                  apiKeySaved
+                    ? 'bg-emerald-950/50 border-emerald-700/70 text-emerald-300'
+                    : 'bg-slate-900 border-slate-700/80 text-slate-300 hover:bg-slate-800'
+                }`}
+                title="Optional Gemini API key for manga vision translation"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                {apiKeySaved ? 'Key saved' : 'API key'}
+              </button>
+              {showApiKeyPanel && (
+                <>
+                  <button
+                    aria-label="Close API key panel"
+                    className="fixed inset-0 z-[75] bg-black/60"
+                    onClick={() => setShowApiKeyPanel(false)}
+                  />
+                  <div className="fixed inset-x-3 top-24 z-[80] mx-auto w-auto max-w-md rounded-2xl border border-slate-700 bg-slate-950 p-4 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-bold text-white">Manga Translator API Key</div>
+                      <button onClick={() => setShowApiKeyPanel(false)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Close">
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-400">
+                      Optional. If the ANIREAD server already has a Gemini key, leave this empty. Otherwise add your own Google AI Studio key. It is kept only for this browser tab session and is not saved to your account.
+                    </p>
+                    <input
+                      type="password"
+                      value={apiKeyDraft}
+                      onChange={(event) => setApiKeyDraft(event.target.value)}
+                      autoComplete="off"
+                      spellCheck={false}
+                      placeholder={apiKeySaved ? 'Enter a new key to replace it' : 'Paste Gemini API key'}
+                      className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white outline-none focus:border-indigo-500"
+                    />
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          if (!apiKeyDraft.trim()) return;
+                          setApiKeyCheckBusy(true);
+                          setApiKeyCheckMessage('');
+                          const result = await verifyMangaTranslationApiKey(apiKeyDraft.trim());
+                          setApiKeyCheckMessage(result.message);
+                          setApiKeyCheckBusy(false);
+                          if (result.valid) {
+                            setMangaTranslationApiKey(apiKeyDraft.trim());
+                            setApiKeySaved(true);
+                            setApiKeyDraft('');
+                          }
+                        }}
+                        disabled={!apiKeyDraft.trim() || apiKeyCheckBusy}
+                        className="flex-1 rounded-xl border border-indigo-500/60 bg-indigo-950/60 px-3 py-2 text-xs font-bold text-indigo-200 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {apiKeyCheckBusy ? 'Checking…' : 'Verify & Save'}
+                      </button>
+                      {apiKeySaved && (
+                        <button
+                          onClick={() => {
+                            setMangaTranslationApiKey('');
+                            setApiKeySaved(false);
+                            setApiKeyDraft('');
+                            setApiKeyCheckMessage('Saved session key cleared.');
+                          }}
+                          className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {apiKeyCheckMessage && (
+                      <p className="mt-2 text-[11px] text-slate-300" role="status">{apiKeyCheckMessage}</p>
+                    )}
+                    <p className="mt-2 text-[10px] text-slate-500">
+                      Never share your API key in chat or screenshots. Clear it when finished on a shared device.
+                    </p>
                   </div>
                 </>
               )}
