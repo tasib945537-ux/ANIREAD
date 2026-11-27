@@ -40,7 +40,7 @@ import {
 import { GoogleAITranslator, ALL_WORLD_LANGUAGES } from './GoogleAITranslator';
 import { MangaPageDifferenceViewer } from './MangaPageDifferenceViewer';
 import { MangaCanvasPage } from './MangaCanvasPage';
-import { translateMangaPage, TranslatedMangaPageResult, getMangaTranslationApiKey, setMangaTranslationApiKey } from '../services/translator';
+import { translateMangaPage, TranslatedMangaPageResult, getMangaTranslationApiKey, setMangaTranslationApiKey, verifyMangaTranslationApiKey } from '../services/translator';
 import {
   mangaTranslationQueue,
   getChapterTranslations,
@@ -98,6 +98,8 @@ export const MangaReader: React.FC<Props> = ({
   const [showApiKeyPanel, setShowApiKeyPanel] = useState(false);
   const [apiKeyDraft, setApiKeyDraft] = useState('');
   const [apiKeySaved, setApiKeySaved] = useState(() => Boolean(getMangaTranslationApiKey()));
+  const [apiKeyCheckBusy, setApiKeyCheckBusy] = useState(false);
+  const [apiKeyCheckMessage, setApiKeyCheckMessage] = useState('');
   const [showPageDiffModal, setShowPageDiffModal] = useState(false);
   const [diffTargetPage, setDiffTargetPage] = useState(1);
   const [chapterLangFilter, setChapterLangFilter] = useState<string>('all');
@@ -918,18 +920,23 @@ export const MangaReader: React.FC<Props> = ({
                     />
                     <div className="mt-3 flex items-center gap-2">
                       <button
-                        onClick={() => {
-                          if (apiKeyDraft.trim()) {
+                        onClick={async () => {
+                          if (!apiKeyDraft.trim()) return;
+                          setApiKeyCheckBusy(true);
+                          setApiKeyCheckMessage('');
+                          const result = await verifyMangaTranslationApiKey(apiKeyDraft.trim());
+                          setApiKeyCheckMessage(result.message);
+                          setApiKeyCheckBusy(false);
+                          if (result.valid) {
                             setMangaTranslationApiKey(apiKeyDraft.trim());
                             setApiKeySaved(true);
                             setApiKeyDraft('');
-                            setShowApiKeyPanel(false);
                           }
                         }}
-                        disabled={!apiKeyDraft.trim()}
-                        className="flex-1 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+                        disabled={!apiKeyDraft.trim() || apiKeyCheckBusy}
+                        className="flex-1 rounded-xl border border-indigo-500/60 bg-indigo-950/60 px-3 py-2 text-xs font-bold text-indigo-200 disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        Save for this session
+                        {apiKeyCheckBusy ? 'Checking…' : 'Verify & Save'}
                       </button>
                       {apiKeySaved && (
                         <button
@@ -937,6 +944,7 @@ export const MangaReader: React.FC<Props> = ({
                             setMangaTranslationApiKey('');
                             setApiKeySaved(false);
                             setApiKeyDraft('');
+                            setApiKeyCheckMessage('Saved session key cleared.');
                           }}
                           className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800"
                         >
@@ -944,6 +952,9 @@ export const MangaReader: React.FC<Props> = ({
                         </button>
                       )}
                     </div>
+                    {apiKeyCheckMessage && (
+                      <p className="mt-2 text-[11px] text-slate-300" role="status">{apiKeyCheckMessage}</p>
+                    )}
                     <p className="mt-2 text-[10px] text-slate-500">
                       Never share your API key in chat or screenshots. Clear it when finished on a shared device.
                     </p>
