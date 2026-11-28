@@ -15,6 +15,37 @@ import {
 } from 'lucide-react';
 import { MangaPageDialogue, TranslatedMangaPageResult } from '../services/translator';
 
+/** Measure translated text against the detected source region. */
+function fitOverlayFontSize(text: string, widthPx: number, heightPx: number, fontFamily: string, weight = 700): number {
+  if (typeof document === 'undefined' || !text.trim()) return 8;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return 8;
+  const words = text.replace(/\s+/g, ' ').trim().split(' ');
+  const byWord = words.length > 1;
+  const tokens = byWord ? words : [...text];
+  const fits = (size: number) => {
+    ctx.font = `${weight} ${size}px ${fontFamily}`;
+    let line = '';
+    const lines: string[] = [];
+    for (const token of tokens) {
+      const candidate = line ? `${line}${byWord ? ' ' : ''}${token}` : token;
+      if (line && ctx.measureText(candidate).width > widthPx) { lines.push(line); line = token; }
+      else line = candidate;
+    }
+    if (line) lines.push(line);
+    const widest = Math.max(0, ...lines.map((value) => ctx.measureText(value).width));
+    return widest <= widthPx * 0.96 && lines.length * size * 1.08 <= heightPx * 0.92;
+  };
+  let low = 6;
+  let high = Math.max(7, Math.min(42, heightPx * 0.72, widthPx * 0.72));
+  for (let i = 0; i < 12; i += 1) {
+    const mid = (low + high) / 2;
+    if (fits(mid)) low = mid; else high = mid;
+  }
+  return Math.max(6, low);
+}
+
 interface RegionAdjustment {
   deltaX: number; // percentage offset
   deltaY: number; // percentage offset
@@ -308,31 +339,34 @@ export const MangaCanvasPage: React.FC<MangaCanvasPageProps> = ({
               width = Math.max(5.5, Math.min(98 - left, width));
               height = Math.max(3.2, Math.min(98 - top, height));
 
-              // Compute proportional font size to mirror original hierarchy
-              let fontSize = 'clamp(9.5px, 1.2vw, 13px)';
-              if (item.fontSize === 'small' || width < 12 || item.type === 'caption') {
-                fontSize = 'clamp(8px, 0.95vw, 10.5px)';
-              } else if (item.fontSize === 'large' || width > 32) {
-                fontSize = 'clamp(12px, 1.5vw, 16.5px)';
-              } else if (item.fontSize === 'extra-large' || item.type === 'heading') {
-                fontSize = 'clamp(14px, 1.9vw, 22px)';
-              }
-
+              // Match translated lettering to the actual detected source rectangle.
+              const imageRect = imgRef.current?.getBoundingClientRect();
+              const regionWidthPx = Math.max(1, (imageRect?.width || 640) * width / 100);
+              const regionHeightPx = Math.max(1, (imageRect?.height || 900) * height / 100);
+              const displayText = adj.showOriginal ? item.originalText : adj.customText || item.translatedText;
               const isVertical = item.direction === 'vertical';
+              const fontFamily = targetLangCode === 'bn'
+                ? 'Noto Sans Bengali, sans-serif'
+                : targetLangCode === 'hi' ? 'Noto Sans Devanagari, sans-serif' : 'system-ui, sans-serif';
+              const hierarchyScale = item.fontSize === 'small' || item.type === 'caption' ? 0.88
+                : item.fontSize === 'extra-large' || item.type === 'heading' ? 1.12
+                : item.fontSize === 'large' ? 1.05 : 1;
+              const fontSize = `${fitOverlayFontSize(displayText || '', Math.max(8, regionWidthPx - 4), Math.max(8, regionHeightPx - 4), fontFamily, item.type === 'heading' || item.type === 'sfx' ? 800 : 700) * hierarchyScale}px`;
+
               const isDark = item.background === 'dark' || item.fontColor === 'white';
               const isRed = item.fontColor === 'red' || (isVertical && !isDark);
 
               // Google Lens style inpainting / seamless speech bubble matching
               let bubbleClasses =
-                'bg-white text-slate-950 rounded-[35%] sm:rounded-[45%] shadow-[0_1px_4px_rgba(0,0,0,0.12)] border border-slate-200/60';
+                'bg-white/95 text-slate-950 rounded-[24%] shadow-none border-0';
 
               if (isVertical) {
                 // Vertical banner like "HE CRAVES MONEY!" ("সে টাকার জন্য আকুল!")
                 bubbleClasses = isRed
-                  ? 'bg-white/95 text-red-600 font-black rounded-lg shadow-md border border-red-200/60'
-                  : 'bg-white/95 text-slate-950 font-black rounded-lg shadow-md border border-slate-300/60';
+                  ? 'bg-white/95 text-red-600 font-black rounded-[3px] shadow-none border-0'
+                  : 'bg-white/95 text-slate-950 font-black rounded-[3px] shadow-none border-0';
               } else if (item.type === 'thought') {
-                bubbleClasses = 'bg-white text-slate-950 rounded-[45%] shadow-sm border border-slate-200/40';
+                bubbleClasses = 'bg-white/94 text-slate-950 rounded-[30%] shadow-none border-0';
               } else if (item.type === 'sfx') {
                 bubbleClasses = isDark
                   ? 'bg-black/90 text-amber-300 font-black tracking-wider uppercase rounded-md shadow-md border border-amber-500/40'
@@ -340,14 +374,10 @@ export const MangaCanvasPage: React.FC<MangaCanvasPageProps> = ({
               } else if (item.type === 'narration' || item.type === 'heading') {
                 bubbleClasses = isDark
                   ? 'bg-slate-950/95 text-slate-100 rounded-md border border-slate-700/80 font-medium'
-                  : 'bg-white/95 text-slate-950 rounded-md border border-slate-300/80 font-medium';
+                  : 'bg-white/94 text-slate-950 rounded-sm border-0 font-medium';
               } else if (isDark) {
                 bubbleClasses = 'bg-slate-950/95 text-slate-100 rounded-[35%] sm:rounded-[45%] shadow-sm border border-slate-800';
               }
-
-              const displayText = adj.showOriginal
-                ? item.originalText
-                : adj.customText || item.translatedText;
 
               const isSelected = selectedDialogueId === item.id;
 
@@ -367,7 +397,7 @@ export const MangaCanvasPage: React.FC<MangaCanvasPageProps> = ({
                     minHeight: `${height}%`,
                     writingMode: isVertical ? 'vertical-rl' : 'horizontal-tb',
                   }}
-                  className={`absolute p-1 sm:p-1.5 flex flex-col items-center justify-center text-center pointer-events-auto leading-snug cursor-pointer transition-all hover:scale-[1.02] ${bubbleClasses} ${fontClass} ${
+                  className={`absolute p-[1px] flex flex-col items-center justify-center text-center pointer-events-auto leading-none cursor-pointer transition-colors ${bubbleClasses} ${fontClass} ${
                     isSelected
                       ? 'ring-2 ring-indigo-500 shadow-xl z-30'
                       : ''
@@ -375,7 +405,7 @@ export const MangaCanvasPage: React.FC<MangaCanvasPageProps> = ({
                   title="Tap to inspect original text or adjust alignment (Google Lens)"
                 >
                   <span
-                    style={{ fontSize, lineHeight: 1.22 }}
+                    style={{ fontSize, lineHeight: 1.08, letterSpacing: '-0.01em', overflowWrap: 'anywhere', textShadow: 'none' }}
                     className={`break-words w-full select-none ${
                       item.type === 'sfx' || item.type === 'heading' ? 'font-black' : 'font-bold'
                     } ${adj.showOriginal ? 'italic text-indigo-900 dark:text-indigo-200' : ''}`}
