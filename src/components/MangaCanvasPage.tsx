@@ -351,26 +351,26 @@ export const MangaCanvasPage: React.FC<MangaCanvasPageProps> = ({
               const hierarchyScale = item.fontSize === 'small' || item.type === 'caption' ? 0.88
                 : item.fontSize === 'extra-large' || item.type === 'heading' ? 1.12
                 : item.fontSize === 'large' ? 1.05 : 1;
-              const fontSize = `${fitOverlayFontSize(displayText || '', Math.max(8, regionWidthPx - 4), Math.max(8, regionHeightPx - 4), fontFamily, item.type === 'heading' || item.type === 'sfx' ? 800 : 700) * hierarchyScale}px`;
+              const fittedSize = fitOverlayFontSize(displayText || '', Math.max(8, regionWidthPx - 2), Math.max(8, regionHeightPx - 2), fontFamily, 500);\n              // Normal manga lettering, not oversized translated bubbles.\n              const fontSize = `${Math.max(6, Math.min(12, fittedSize * hierarchyScale * 0.82))}px`;
 
               const isDark = item.background === 'dark' || item.fontColor === 'white';
               const isRed = item.fontColor === 'red' || (isVertical && !isDark);
 
               // Google Lens style inpainting / seamless speech bubble matching
               let bubbleClasses =
-                'bg-white/95 text-slate-950 rounded-[24%] shadow-none border-0';
+                'bg-white/96 text-slate-950 rounded-none shadow-none border-0';
 
               if (isVertical) {
                 // Vertical banner like "HE CRAVES MONEY!" ("সে টাকার জন্য আকুল!")
                 bubbleClasses = isRed
-                  ? 'bg-white/95 text-red-600 font-black rounded-[3px] shadow-none border-0'
-                  : 'bg-white/95 text-slate-950 font-black rounded-[3px] shadow-none border-0';
+                  ? 'bg-white/96 text-red-700 font-semibold rounded-none shadow-none border-0'
+                  : 'bg-white/96 text-slate-950 font-semibold rounded-none shadow-none border-0';
               } else if (item.type === 'thought') {
-                bubbleClasses = 'bg-white/94 text-slate-950 rounded-[30%] shadow-none border-0';
+                bubbleClasses = 'bg-white/96 text-slate-950 rounded-none shadow-none border-0';
               } else if (item.type === 'sfx') {
                 bubbleClasses = isDark
-                  ? 'bg-black/90 text-amber-300 font-black tracking-wider uppercase rounded-md shadow-md border border-amber-500/40'
-                  : 'bg-white/95 text-red-600 font-black tracking-wider uppercase rounded-md shadow-md border border-red-300/40';
+                  ? 'bg-black/94 text-amber-200 font-semibold tracking-normal rounded-none shadow-none border-0'
+                  : 'bg-white/96 text-red-700 font-semibold tracking-normal rounded-none shadow-none border-0';
               } else if (item.type === 'narration' || item.type === 'heading') {
                 bubbleClasses = isDark
                   ? 'bg-slate-950/95 text-slate-100 rounded-md border border-slate-700/80 font-medium'
@@ -397,7 +397,7 @@ export const MangaCanvasPage: React.FC<MangaCanvasPageProps> = ({
                     minHeight: `${height}%`,
                     writingMode: isVertical ? 'vertical-rl' : 'horizontal-tb',
                   }}
-                  className={`absolute p-[1px] flex flex-col items-center justify-center text-center pointer-events-auto leading-none cursor-pointer transition-colors ${bubbleClasses} ${fontClass} ${
+                  className={`absolute p-0 flex flex-col items-center justify-center text-center overflow-hidden pointer-events-auto leading-none cursor-pointer transition-colors ${bubbleClasses} ${fontClass} ${
                     isSelected
                       ? 'ring-2 ring-indigo-500 shadow-xl z-30'
                       : ''
